@@ -22,16 +22,16 @@ public class RollingBall : MonoBehaviour
     private Vector3 _currentNormal;
     private Vector3 _previousNormal;
     
-    public float xStart = 0.07f;
-    public float zStart = 0.02f;
+    public float xStart = 0.06f;
+    public float zStart = 0.03f;
 
     private void Start()
     {
         _currentPos = new Vector3(xStart, 
-            0.097f + _radius, 
+            0.095f + _radius, 
             zStart);
         
-        Debug.Log(meshGenerator.GetSurfaceHeight(new Vector2(xStart,zStart)));
+        //Debug.Log(meshGenerator.GetSurfaceHeight(new Vector2(xStart,zStart)));
         
         _previousPos = _currentPos;
     }
@@ -69,7 +69,6 @@ public class RollingBall : MonoBehaviour
             if (baryCoords is { x: >= 0.0f, y: >= 0.0f, z: >= 0.0f })
             {
                 _currentTriangle = i / 3;
-                
                 // Calculate normal vector
                 _currentNormal = Vector3.Cross(p1 - p0, p2 - p0).normalized;
                 // Calculate acceleration vector
@@ -106,7 +105,6 @@ public class RollingBall : MonoBehaviour
                 _previousTriangle = _currentTriangle;
                 _previousNormal = _currentNormal;
             }
-
             // if (_currentPos.x < 0.0 || _currentPos.x > 0.8 ||
             //     _currentPos.z < 0.0 || _currentPos.z > 0.4)
             // {

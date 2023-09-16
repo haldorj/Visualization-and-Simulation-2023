@@ -457,9 +457,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   meshGenerator: {fileID: 1002569321}
-  simSpeed: 0.5
-  xStart: 0.07
-  zStart: 0.02
+  xStart: 0.06
+  zStart: 0.03
 --- !u!4 &994138517
 Transform:
   m_ObjectHideFlags: 0
