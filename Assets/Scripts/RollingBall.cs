@@ -9,8 +9,6 @@ public class RollingBall : MonoBehaviour
 {
     private float _radius = 0.015f;
     public MeshGenerator meshGenerator;
-
-    public float mass = 1.0f;
     
     private Vector3 _currentVelocity;
     private Vector3 _previousVelocity;
@@ -18,9 +16,23 @@ public class RollingBall : MonoBehaviour
     private Vector3 _currentPos;
     private Vector3 _previousPos;
 
-    private void Awake()
+    private int _currentTriangle;
+    private int _previousTriangle;
+    
+    private Vector3 _currentNormal;
+    private Vector3 _previousNormal;
+    
+    public float xStart = 0.07f;
+    public float zStart = 0.02f;
+
+    private void Start()
     {
-        _currentPos = new Vector3(0.0f, 0.097f + _radius, 0.0f);
+        _currentPos = new Vector3(xStart, 
+            0.097f + _radius, 
+            zStart);
+        
+        Debug.Log(meshGenerator.GetSurfaceHeight(new Vector2(xStart,zStart)));
+        
         _previousPos = _currentPos;
     }
 
@@ -30,9 +42,7 @@ public class RollingBall : MonoBehaviour
         if (meshGenerator)
             Move();
         else
-        {
             FreeFall();
-        }
     }
     
     void Move()
@@ -58,26 +68,50 @@ public class RollingBall : MonoBehaviour
             
             if (baryCoords is { x: >= 0.0f, y: >= 0.0f, z: >= 0.0f })
             {
-                // Calculate normal vector
-                Vector3 n = Vector3.Cross(p1 - p0, p2 - p0).normalized;
-                // Calculate acceleration vector
-                Vector3 acceleration = new Vector3(n.x * n.y, n.y * n.y - 1, n.z * n.y) * -Physics.gravity.y;
+                _currentTriangle = i / 3;
                 
+                // Calculate normal vector
+                _currentNormal = Vector3.Cross(p1 - p0, p2 - p0).normalized;
+                // Calculate acceleration vector
+                var acceleration = new Vector3(_currentNormal.x * _currentNormal.y, 
+                    _currentNormal.y * _currentNormal.y - 1, 
+                    _currentNormal.z * _currentNormal.y) * -Physics.gravity.y;
                 // Update velocity
                 _currentVelocity = _previousVelocity + acceleration * Time.fixedDeltaTime;
                 _previousVelocity = _currentVelocity;
                 // Update position
                 _currentPos = _previousPos + _currentVelocity * Time.fixedDeltaTime;
                 _previousPos = _currentPos;
-                
                 transform.position = _currentPos;
-                
-                Debug.Log(_currentPos);
+
+                if (_currentTriangle != _previousTriangle)
+                {
+                    // The ball is on a new triangle
+                    
+                    // Calculate the normal of the collision plane
+                    var x = (_previousNormal + _currentNormal) / (_previousNormal + _currentNormal).magnitude;
+                    // Correct the position upwards in the direction of the normal (x)
+                    
+                    // Update the velocity vector r = d − 2(d * n)n
+                    var velocityAfter = _currentVelocity - 2 * Vector3.Dot(_currentVelocity, x.normalized) * x.normalized;
+                    _currentVelocity = velocityAfter + acceleration * Time.fixedDeltaTime;
+                    _previousVelocity = _currentVelocity;
+                    
+                    // Update the position in the direction of the new velocity vector
+                    _currentPos = _previousPos + _currentVelocity * Time.fixedDeltaTime;
+                    _previousPos = _currentPos;
+                    transform.position = _currentPos;
+                }
+
+                _previousTriangle = _currentTriangle;
+                _previousNormal = _currentNormal;
             }
-            else
-            {
-                FreeFall();
-            }
+
+            // if (_currentPos.x < 0.0 || _currentPos.x > 0.8 ||
+            //     _currentPos.z < 0.0 || _currentPos.z > 0.4)
+            // {
+            //     FreeFall();
+            // }
         }
     }
 
@@ -97,6 +131,6 @@ public class RollingBall : MonoBehaviour
     {
         // Draw a yellow sphere at the transform's position
         Gizmos.color = Color.yellow;
-        Gizmos.DrawSphere(transform.position, _radius);
+        Gizmos.DrawSphere(transform.position, _radius + 0.01f);
     }
 }

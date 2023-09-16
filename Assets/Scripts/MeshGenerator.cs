@@ -58,10 +58,10 @@ public class MeshGenerator : MonoBehaviour
 
         triangles = new int[]
         {
-            2, 1, 0
-            // 2, 3, 1,
-            // 4, 1, 3,
-            // 1, 4, 5
+            2, 1, 0,
+            2, 3, 1,
+            4, 1, 3,
+            1, 4, 5
         };
     }
 
@@ -98,5 +98,35 @@ public class MeshGenerator : MonoBehaviour
         baryc.z = n.y / areal123;
 
         return baryc;
+    }
+    
+    public float GetSurfaceHeight(Vector2 p)
+    {
+        for (int i = 0; i < triangles.Length; i += 3)
+        {
+            Vector3 p0 = vertices[triangles[i]];
+            Vector3 p1 = vertices[triangles[i + 1]];
+            Vector3 p2 = vertices[triangles[i + 2]];
+            
+            Vector3 baryCoords = BarycentricCoordinates(
+                new Vector2(p0.x, p0.z), 
+                new Vector2(p1.x, p1.z),  
+                new Vector2(p2.x, p2.z),  
+                p
+            );
+            
+            // Check if the player's position is inside the triangle.
+            if (baryCoords is { x: >= 0.0f, y: >= 0.0f, z: >= 0.0f })
+            {
+                // The player's position is inside the triangle.
+                // Calculate the height of the surface at the player's position.
+                float height = baryCoords.x * p0.y + baryCoords.y * p1.y + baryCoords.z * p2.y;
+
+                // Return the height as the height of the surface at the player's position.
+                Debug.Log(height);
+                return height;
+            }
+        }
+        return 0.0f;
     }
 }
