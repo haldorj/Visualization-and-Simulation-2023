@@ -11,7 +11,7 @@ public class MeshGenerator : MonoBehaviour
     public Vector3[] vertices;
     public int[] triangles;
 
-    void Start()
+    void Awake()
     {
         _mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = _mesh;
