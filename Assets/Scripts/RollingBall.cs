@@ -30,9 +30,6 @@ public class RollingBall : MonoBehaviour
         // Set initial height
         var yStart = meshGenerator.GetSurfaceHeight(new Vector2(xStart, zStart));
         _currentPos = new Vector3(xStart, yStart + _radius, zStart);
-        
-        Debug.Log("Starting surface height: " + yStart);
-        
         _previousPos = _currentPos;
     }
 
@@ -86,19 +83,19 @@ public class RollingBall : MonoBehaviour
                     // The ball is on a new triangle
                     
                     // Calculate the normal (n) of the collision plane
-                    var n = ((_previousNormal + _currentNormal) / (_previousNormal + _currentNormal).magnitude)
-                        .normalized;
+                    var n = ((_previousNormal + _currentNormal) / 
+                             Mathf.Abs((_previousNormal + _currentNormal).magnitude)).normalized;
                     
                     // Correct the position upwards in the direction of the normal (n)
                     
                     // Predict distance traveled into the new triangle (ds = v · dt)
                     var ds = _currentVelocity * Time.fixedDeltaTime;
+                    // Deviation vector (y)
+                    var y = _currentPos - ds;
                     // Deviation vector (y) projected onto normal (n)
-                    var yn = Vector3.Dot(_currentPos - ds, n) * n;
-                    // Apply correction distance (d = r - y)
+                    var yn = Vector3.Dot(y, n) * n;
+                    // Calculate correction distance (d = r - y)
                     var correctionDist = _radius - yn.magnitude;
-                    
-                    Debug.Log("Correction distance: " + correctionDist);
                     
                     // Update the velocity vector r = v − 2(v · n)n
                     var velocityAfter = _currentVelocity - 2 * Vector3.Dot(_currentVelocity, n) * n;
@@ -108,10 +105,10 @@ public class RollingBall : MonoBehaviour
                     // Update the position in the direction of the new velocity vector
                     _currentPos = _previousPos + _currentVelocity * Time.fixedDeltaTime;
                     
-                    // Apply the correction
-                    _currentPos += n * correctionDist;
-                    // Move the distance of the correction along the velocity vector
-                    _currentPos += _currentVelocity.normalized * correctionDist;
+                    // Apply the correction along the normal (n) of the collision plane
+                    //_currentPos += n * correctionDist;
+                    // and the velocity vector
+                    //_currentPos += _currentVelocity.normalized * correctionDist;
                     
                     _previousPos = _currentPos;
                     transform.position = _currentPos;
@@ -120,11 +117,11 @@ public class RollingBall : MonoBehaviour
                 _previousTriangle = _currentTriangle;
                 _previousNormal = _currentNormal;
             }
-            if (_currentPos.x < 0.0 || _currentPos.x > 0.8 ||
-                _currentPos.z < 0.0 || _currentPos.z > 0.4)
-            {
-                FreeFall();
-            }
+        }
+        if (_currentPos.x < 0.0 || _currentPos.x > 0.8 ||
+            _currentPos.z < 0.0 || _currentPos.z > 0.4)
+        {
+            FreeFall();
         }
     }
 
@@ -147,6 +144,6 @@ public class RollingBall : MonoBehaviour
     {
         // Draw a yellow sphere at the transform's position
         Gizmos.color = Color.yellow;
-        Gizmos.DrawSphere(transform.position, _radius + 0.01f);
+        Gizmos.DrawSphere(transform.position, _radius + 0.001f);
     }
 }
