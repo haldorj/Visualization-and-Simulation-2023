@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -18,9 +19,11 @@ public class RollingBall : MonoBehaviour
 
     private int _currentTriangle;
     private int _previousTriangle;
-    
+
     private Vector3 _currentNormal = Vector3.zero;
     private Vector3 _previousNormal = Vector3.zero;
+
+    private Vector3 _center;
     
     public float xStart = 0.06f;
     public float zStart = 0.03f;
@@ -31,12 +34,19 @@ public class RollingBall : MonoBehaviour
         var yStart = meshGenerator.GetSurfaceHeight(new Vector2(xStart, zStart));
         _currentPos = new Vector3(xStart, yStart + _radius, zStart);
         _previousPos = _currentPos;
+
+        transform.position = _currentPos;
+        
+        Correction();
     }
 
     void FixedUpdate()
     {
         if (meshGenerator)
+        {
             Move();
+            //Correction();
+        }
     }
     
     void Move()
@@ -48,7 +58,7 @@ public class RollingBall : MonoBehaviour
             Vector3 p0 = meshGenerator.vertices[meshGenerator.triangles[i]];
             Vector3 p1 = meshGenerator.vertices[meshGenerator.triangles[i + 1]];
             Vector3 p2 = meshGenerator.vertices[meshGenerator.triangles[i + 2]];
-            
+
             // Find the balls position in the xz-plane
             Vector2 pos = new Vector2(_currentPos.x, _currentPos.z);
             
@@ -83,35 +93,18 @@ public class RollingBall : MonoBehaviour
                     // The ball is on a new triangle
                     
                     // Calculate the normal (n) of the collision plane
-                    var n = ((_previousNormal + _currentNormal) / 
-                             Mathf.Abs((_previousNormal + _currentNormal).magnitude)).normalized;
-                    
-                    // Correct the position upwards in the direction of the normal (n)
-                    
-                    // Predict distance traveled into the new triangle (ds = v · dt)
-                    var ds = _currentVelocity * Time.fixedDeltaTime;
-                    // Deviation vector (y)
-                    var y = _currentPos - ds;
-                    // Deviation vector (y) projected onto normal (n)
-                    var yn = Vector3.Dot(y, n) * n;
-                    // Calculate correction distance (d = r - y)
-                    var correctionDist = _radius - yn.magnitude;
-                    
+                    var n = (_previousNormal + _currentNormal).normalized;
+
                     // Update the velocity vector r = v − 2(v · n)n
-                    var velocityAfter = _currentVelocity - 2 * Vector3.Dot(_currentVelocity, n) * n;
+                    var velocityAfter = _previousVelocity - 2 * Vector3.Dot(_currentVelocity, n) * n;
+                    
                     _currentVelocity = velocityAfter + acceleration * Time.fixedDeltaTime;
                     _previousVelocity = _currentVelocity;
                     
                     // Update the position in the direction of the new velocity vector
                     _currentPos = _previousPos + _currentVelocity * Time.fixedDeltaTime;
-                    
-                    // Apply the correction along the normal (n) of the collision plane
-                    //_currentPos += n * correctionDist;
-                    // and the velocity vector
-                    //_currentPos += _currentVelocity.normalized * correctionDist;
-                    
-                    _previousPos = _currentPos;
                     transform.position = _currentPos;
+                    _previousPos = _currentPos;
                 }
                 // Update triangle index and normal
                 _previousTriangle = _currentTriangle;
@@ -125,6 +118,24 @@ public class RollingBall : MonoBehaviour
         }
     }
 
+    void Correction()
+    {
+        _center = _currentPos;
+        // Find the point on the ground directly under the center of the ball
+        Vector3 p = new Vector3(_center.x, 
+                meshGenerator.GetSurfaceHeight(new Vector2(_center.x, _center.z)), 
+                _center.z);
+        
+        // Distance vector from center to p
+        Vector3 dist = _center - p;
+        
+        // Distance vector projected onto normal
+        Vector3 b = Vector3.Dot(dist, _currentNormal) * _currentNormal;
+
+        if (b.magnitude <= _radius)
+            _currentPos = _center + b;
+    }
+    
     void FreeFall()
     {
         if (_currentPos.y > -3)

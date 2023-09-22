@@ -32,12 +32,12 @@ public class MeshGenerator : MonoBehaviour
             new(0.8f, 0.039f, 0.0f)
         };
 
-        triangles = new int[]
+        triangles = new[]
         {
             2, 1, 0,
-            2, 3, 1,
-            4, 1, 3,
-            1, 4, 5
+            //2, 3, 1,
+            //4, 1, 3,
+            //1, 4, 5
         };
     }
 
@@ -47,6 +47,7 @@ public class MeshGenerator : MonoBehaviour
 
         _mesh.vertices = vertices;
         _mesh.triangles = triangles;
+        _mesh.RecalculateTangents();
         _mesh.RecalculateNormals();
     }
     
