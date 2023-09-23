@@ -662,8 +662,8 @@ MonoBehaviour:
   meshGenerator: {fileID: 1002569321}
   currentVelocity: {x: 0, y: 0, z: 0}
   currentPos: {x: 0, y: 0, z: 0}
-  xStart: 0.06
-  zStart: 0.03
+  xStart: 0.01
+  zStart: 0
 --- !u!4 &2118760888
 Transform:
   m_ObjectHideFlags: 0

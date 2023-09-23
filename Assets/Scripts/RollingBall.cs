@@ -9,14 +9,14 @@ using UnityEngine.Serialization;
 public class RollingBall : MonoBehaviour
 {
     private float _radius = 0.015f;
-    public MeshGenerator meshGenerator;
+    public TriangleSurface meshGenerator;
 
     [FormerlySerializedAs("_currentVelocity")] [SerializeField] private Vector3 currentVelocity;
     private Vector3 _previousVelocity;
     
     [FormerlySerializedAs("_currentPos")] [SerializeField] private Vector3 currentPos;
     private Vector3 _previousPos;
-
+    
     private int _currentTriangle;
     private int _previousTriangle;
 
@@ -25,6 +25,11 @@ public class RollingBall : MonoBehaviour
 
     public float xStart = 0.06f;
     public float zStart = 0.03f;
+
+    private void Awake()
+    {
+        transform.localScale = Vector3.one * _radius * 2;
+    }
 
     private void Start()
     {
@@ -41,7 +46,6 @@ public class RollingBall : MonoBehaviour
         if (meshGenerator)
         {
             Move();
-            Correction();
         }
     }
     
@@ -59,7 +63,7 @@ public class RollingBall : MonoBehaviour
             Vector2 pos = new Vector2(currentPos.x, currentPos.z);
             
             // Find which triangle the ball is currently on with barycentric coordinates
-            Vector3 baryCoords = MeshGenerator.BarycentricCoordinates(
+            Vector3 baryCoords = TriangleSurface.BarycentricCoordinates(
                 new Vector2(p0.x, p0.z), 
                 new Vector2(p1.x, p1.z),  
                 new Vector2(p2.x, p2.z),  
@@ -108,23 +112,32 @@ public class RollingBall : MonoBehaviour
                 _previousNormal = _currentNormal;
             }
         }
-        if (currentPos.x < 0.0 || currentPos.x > 0.8 ||
+        // Basic area check to verify that the ball is on the plane
+        if (currentPos.x < -1.0 || currentPos.x > 0.8 ||
             currentPos.z < 0.0 || currentPos.z > 0.4)
         {
             FreeFall();
+        }
+        else
+        {
+            Correction();
         }
     }
 
     void Correction()
     {
         // Find the point on the ground directly under the center of the ball
-        Vector3 p = new Vector3(currentPos.x, 
+        var point = new Vector3(currentPos.x, 
             meshGenerator.GetSurfaceHeight(new Vector2(currentPos.x, currentPos.z)), 
             currentPos.z);
-
-        // Update position
-        currentPos = p + _radius * _currentNormal;
-        transform.position = currentPos;
+        
+        // if the edge of the ball is under the plane
+        if (currentPos.y -_radius < point.y)
+        {
+            // Update position (distance of radius in the direction of the normal)
+            currentPos = point + _radius * _currentNormal;
+            transform.position = currentPos;
+        }
     }
 
     void FreeFall()
@@ -141,7 +154,7 @@ public class RollingBall : MonoBehaviour
             transform.position = currentPos;
         }
     }
-    
+
     void OnDrawGizmosSelected()
     {
         // Draw a yellow sphere at the transform's position
