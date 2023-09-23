@@ -10,21 +10,19 @@ public class RollingBall : MonoBehaviour
 {
     private float _radius = 0.015f;
     public MeshGenerator meshGenerator;
+
+    [FormerlySerializedAs("_currentVelocity")] [SerializeField] private Vector3 currentVelocity;
+    private Vector3 _previousVelocity;
     
-    private Vector3 _currentVelocity = Vector3.zero;
-    private Vector3 _previousVelocity = Vector3.zero;
-    
-    private Vector3 _currentPos = Vector3.zero;
-    private Vector3 _previousPos = Vector3.zero;
+    [FormerlySerializedAs("_currentPos")] [SerializeField] private Vector3 currentPos;
+    private Vector3 _previousPos;
 
     private int _currentTriangle;
     private int _previousTriangle;
 
-    private Vector3 _currentNormal = Vector3.zero;
-    private Vector3 _previousNormal = Vector3.zero;
+    private Vector3 _currentNormal;
+    private Vector3 _previousNormal;
 
-    private Vector3 _center;
-    
     public float xStart = 0.06f;
     public float zStart = 0.03f;
 
@@ -32,12 +30,10 @@ public class RollingBall : MonoBehaviour
     {
         // Set initial height
         var yStart = meshGenerator.GetSurfaceHeight(new Vector2(xStart, zStart));
-        _currentPos = new Vector3(xStart, yStart + _radius, zStart);
-        _previousPos = _currentPos;
+        currentPos = new Vector3(xStart, yStart + _radius, zStart);
+        _previousPos = currentPos;
 
-        transform.position = _currentPos;
-        
-        Correction();
+        transform.position = currentPos;
     }
 
     void FixedUpdate()
@@ -45,7 +41,7 @@ public class RollingBall : MonoBehaviour
         if (meshGenerator)
         {
             Move();
-            //Correction();
+            Correction();
         }
     }
     
@@ -60,7 +56,7 @@ public class RollingBall : MonoBehaviour
             Vector3 p2 = meshGenerator.vertices[meshGenerator.triangles[i + 2]];
 
             // Find the balls position in the xz-plane
-            Vector2 pos = new Vector2(_currentPos.x, _currentPos.z);
+            Vector2 pos = new Vector2(currentPos.x, currentPos.z);
             
             // Find which triangle the ball is currently on with barycentric coordinates
             Vector3 baryCoords = MeshGenerator.BarycentricCoordinates(
@@ -81,38 +77,38 @@ public class RollingBall : MonoBehaviour
                     _currentNormal.y * _currentNormal.y - 1, 
                     _currentNormal.z * _currentNormal.y) * -Physics.gravity.y;
                 // Update velocity
-                _currentVelocity = _previousVelocity + acceleration * Time.fixedDeltaTime;
-                _previousVelocity = _currentVelocity;
+                currentVelocity = _previousVelocity + acceleration * Time.fixedDeltaTime;
+                _previousVelocity = currentVelocity;
                 // Update position
-                _currentPos = _previousPos + _currentVelocity * Time.fixedDeltaTime;
-                _previousPos = _currentPos;
-                transform.position = _currentPos;
+                currentPos = _previousPos + currentVelocity * Time.fixedDeltaTime;
+                _previousPos = currentPos;
+                transform.position = currentPos;
 
                 if (_currentTriangle != _previousTriangle)
                 {
-                    // The ball is on a new triangle
+                    // COLLISION: The ball is on a new triangle
                     
                     // Calculate the normal (n) of the collision plane
                     var n = (_previousNormal + _currentNormal).normalized;
-
-                    // Update the velocity vector r = v − 2(v · n)n
-                    var velocityAfter = _previousVelocity - 2 * Vector3.Dot(_currentVelocity, n) * n;
                     
-                    _currentVelocity = velocityAfter + acceleration * Time.fixedDeltaTime;
-                    _previousVelocity = _currentVelocity;
+                    // Update the velocity vector r = v − 2(v · n)n
+                    var velocityAfter = _previousVelocity - 2 * Vector3.Dot(_previousVelocity, n) * n;
+                    
+                    currentVelocity = velocityAfter + acceleration * Time.fixedDeltaTime;
+                    _previousVelocity = currentVelocity;
                     
                     // Update the position in the direction of the new velocity vector
-                    _currentPos = _previousPos + _currentVelocity * Time.fixedDeltaTime;
-                    transform.position = _currentPos;
-                    _previousPos = _currentPos;
+                    currentPos = _previousPos + currentVelocity * Time.fixedDeltaTime;
+                    transform.position = currentPos;
+                    _previousPos = currentPos;
                 }
                 // Update triangle index and normal
                 _previousTriangle = _currentTriangle;
                 _previousNormal = _currentNormal;
             }
         }
-        if (_currentPos.x < 0.0 || _currentPos.x > 0.8 ||
-            _currentPos.z < 0.0 || _currentPos.z > 0.4)
+        if (currentPos.x < 0.0 || currentPos.x > 0.8 ||
+            currentPos.z < 0.0 || currentPos.z > 0.4)
         {
             FreeFall();
         }
@@ -120,34 +116,65 @@ public class RollingBall : MonoBehaviour
 
     void Correction()
     {
-        _center = _currentPos;
         // Find the point on the ground directly under the center of the ball
-        Vector3 p = new Vector3(_center.x, 
-                meshGenerator.GetSurfaceHeight(new Vector2(_center.x, _center.z)), 
-                _center.z);
+        Vector3 p = new Vector3(currentPos.x, 
+            meshGenerator.GetSurfaceHeight(new Vector2(currentPos.x, currentPos.z)), 
+            currentPos.z);
         
         // Distance vector from center to p
-        Vector3 dist = _center - p;
+        Vector3 dist = currentPos - p;
         
         // Distance vector projected onto normal
         Vector3 b = Vector3.Dot(dist, _currentNormal) * _currentNormal;
 
-        if (b.magnitude <= _radius)
-            _currentPos = _center + b;
+        if (b.sqrMagnitude <= _radius)
+        {
+            Debug.Log("b less than radius!");
+            transform.position = p + _radius * _currentNormal;
+        }
+    }
+    
+    void CorrectAlongNormal(Vector3 n)
+    {
+        // Correct position upwards in the direction of the normal(n)
+        
+        // Predict distance traveled
+        var distanceTraveled = currentVelocity * Time.fixedDeltaTime;
+        
+        // Project distance vector onto the normal (n)
+        var ds = Vector3.Dot(distanceTraveled, n) * n;
+        
+        // Find the point on the plane directly under the center of the ball
+        Vector3 p = new Vector3(currentPos.x, 
+                meshGenerator.GetSurfaceHeight(new Vector2(currentPos.x, currentPos.z)), 
+                currentPos.z);
+        
+        // Distance vector from center to plane (y)
+        Vector3 y = currentPos - p;
+        
+        // Distance vector projected onto normal
+        Vector3 yn = Vector3.Dot(y, n) * n;
+
+        var val = Vector3.Dot(y, n) / y.magnitude;
+
+        if (val == -1 || val == 1)
+        {
+            
+        }
     }
     
     void FreeFall()
     {
-        if (_currentPos.y > -3)
+        if (currentPos.y > -3)
         {
             // Update velocity
-            _currentVelocity = _previousVelocity + Physics.gravity * Time.fixedDeltaTime;
-            _previousVelocity = _currentVelocity;
+            currentVelocity = _previousVelocity + Physics.gravity * Time.fixedDeltaTime;
+            _previousVelocity = currentVelocity;
             // Update position
-            _currentPos = _previousPos + _currentVelocity * Time.fixedDeltaTime;
-            _previousPos = _currentPos;
+            currentPos = _previousPos + currentVelocity * Time.fixedDeltaTime;
+            _previousPos = currentPos;
 
-            transform.position = _currentPos;
+            transform.position = currentPos;
         }
     }
     

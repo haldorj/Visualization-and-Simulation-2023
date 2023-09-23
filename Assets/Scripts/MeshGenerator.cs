@@ -35,9 +35,9 @@ public class MeshGenerator : MonoBehaviour
         triangles = new[]
         {
             2, 1, 0,
-            //2, 3, 1,
-            //4, 1, 3,
-            //1, 4, 5
+            2, 3, 1,
+            4, 1, 3,
+            1, 4, 5
         };
     }
 
@@ -98,7 +98,7 @@ public class MeshGenerator : MonoBehaviour
                 // The player's position is inside the triangle.
                 // Calculate the height of the surface at the player's position.
                 float height = baryCoords.x * p0.y + baryCoords.y * p1.y + baryCoords.z * p2.y;
-
+                
                 // Return the height as the height of the surface at the player's position.
                 return height;
             }

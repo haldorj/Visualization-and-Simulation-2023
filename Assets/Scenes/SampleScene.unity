@@ -660,6 +660,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   meshGenerator: {fileID: 1002569321}
+  currentVelocity: {x: 0, y: 0, z: 0}
+  currentPos: {x: 0, y: 0, z: 0}
   xStart: 0.1
   zStart: 0.1
 --- !u!4 &2118760888
