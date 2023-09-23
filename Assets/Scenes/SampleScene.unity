@@ -600,7 +600,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 246abacb6ff27b1408943cd5dcb414d7, type: 2}
+  - {fileID: 2100000, guid: c6438f776aa1f0548b0d9b0080567430, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -662,8 +662,8 @@ MonoBehaviour:
   meshGenerator: {fileID: 1002569321}
   currentVelocity: {x: 0, y: 0, z: 0}
   currentPos: {x: 0, y: 0, z: 0}
-  xStart: 0.1
-  zStart: 0.1
+  xStart: 0.06
+  zStart: 0.03
 --- !u!4 &2118760888
 Transform:
   m_ObjectHideFlags: 0

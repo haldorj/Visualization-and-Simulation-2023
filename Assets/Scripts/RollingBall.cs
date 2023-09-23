@@ -102,6 +102,7 @@ public class RollingBall : MonoBehaviour
                     transform.position = currentPos;
                     _previousPos = currentPos;
                 }
+                
                 // Update triangle index and normal
                 _previousTriangle = _currentTriangle;
                 _previousNormal = _currentNormal;
@@ -120,49 +121,12 @@ public class RollingBall : MonoBehaviour
         Vector3 p = new Vector3(currentPos.x, 
             meshGenerator.GetSurfaceHeight(new Vector2(currentPos.x, currentPos.z)), 
             currentPos.z);
-        
-        // Distance vector from center to p
-        Vector3 dist = currentPos - p;
-        
-        // Distance vector projected onto normal
-        Vector3 b = Vector3.Dot(dist, _currentNormal) * _currentNormal;
 
-        if (b.sqrMagnitude <= _radius)
-        {
-            Debug.Log("b less than radius!");
-            transform.position = p + _radius * _currentNormal;
-        }
+        // Update position
+        currentPos = p + _radius * _currentNormal;
+        transform.position = currentPos;
     }
-    
-    void CorrectAlongNormal(Vector3 n)
-    {
-        // Correct position upwards in the direction of the normal(n)
-        
-        // Predict distance traveled
-        var distanceTraveled = currentVelocity * Time.fixedDeltaTime;
-        
-        // Project distance vector onto the normal (n)
-        var ds = Vector3.Dot(distanceTraveled, n) * n;
-        
-        // Find the point on the plane directly under the center of the ball
-        Vector3 p = new Vector3(currentPos.x, 
-                meshGenerator.GetSurfaceHeight(new Vector2(currentPos.x, currentPos.z)), 
-                currentPos.z);
-        
-        // Distance vector from center to plane (y)
-        Vector3 y = currentPos - p;
-        
-        // Distance vector projected onto normal
-        Vector3 yn = Vector3.Dot(y, n) * n;
 
-        var val = Vector3.Dot(y, n) / y.magnitude;
-
-        if (val == -1 || val == 1)
-        {
-            
-        }
-    }
-    
     void FreeFall()
     {
         if (currentPos.y > -3)
