@@ -11,6 +11,9 @@ public class RollingBall : MonoBehaviour
     private float _radius = 0.015f;
     public TriangleSurface triangleSurface;
 
+    [FormerlySerializedAs("acceleration")] [SerializeField] private Vector3 accelerationVector;
+    [SerializeField] private float acceleration;
+    
     [FormerlySerializedAs("_currentVelocity")] [SerializeField] private Vector3 currentVelocity;
     private Vector3 _previousVelocity;
     
@@ -74,24 +77,39 @@ public class RollingBall : MonoBehaviour
             
             if (baryCoords is { x: >= 0.0f, y: >= 0.0f, z: >= 0.0f })
             {
+                // Debug.Log("p0: "+p0.ToString("F4"));
+                // Debug.Log("p1: "+p1.ToString("F4"));
+                // Debug.Log("p2: "+p2.ToString("F4"));
+                
                 elapsedTime += Time.fixedDeltaTime;
                 // Current triangle index
                 _currentTriangle = i / 3;
                 // Calculate normal vector
+                
+                // Debug.Log("a: "+(p1 - p0).ToString("F4"));
+                // Debug.Log("b: "+(p2 - p0).ToString("F4"));
+                //
+                // Debug.Log("n: "+(Vector3.Cross(p1 - p0, p2 - p0)).ToString("F4"));
+                
                 currentNormal = Vector3.Cross(p1 - p0, p2 - p0).normalized;
                 // Calculate acceleration vector
-                var acceleration = new Vector3(currentNormal.x * currentNormal.y, 
+                accelerationVector = new Vector3(currentNormal.x * currentNormal.y, 
                     currentNormal.y * currentNormal.y - 1, 
                     currentNormal.z * currentNormal.y) * -Physics.gravity.y;
-                Debug.Log(acceleration.magnitude);
+                acceleration = accelerationVector.magnitude;
                 // Update velocity
-                currentVelocity = _previousVelocity + acceleration * Time.fixedDeltaTime;
+                currentVelocity = _previousVelocity + accelerationVector * Time.fixedDeltaTime;
                 _previousVelocity = currentVelocity;
-                Debug.Log(currentVelocity.magnitude);
+
+                //Debug.Log(currentVelocity.magnitude);
+                
                 // Update position
                 currentPos = _previousPos + currentVelocity * Time.fixedDeltaTime;
                 _previousPos = currentPos;
                 transform.position = currentPos;
+
+                float distanceTraveled = (currentPos - new Vector3(0.01f, 0.097f - _radius, 0.0f)).magnitude;
+                Debug.Log("distanceTraveled: "+ distanceTraveled);
 
                 if (_currentTriangle != _previousTriangle)
                 {
@@ -103,7 +121,7 @@ public class RollingBall : MonoBehaviour
                     // Update the velocity vector r = v − 2(v · n)n
                     var velocityAfter = _previousVelocity - 2 * Vector3.Dot(_previousVelocity, n) * n;
                     
-                    currentVelocity = velocityAfter + acceleration * Time.fixedDeltaTime;
+                    currentVelocity = velocityAfter + accelerationVector * Time.fixedDeltaTime;
                     _previousVelocity = currentVelocity;
                     
                     // Update the position in the direction of the new velocity vector

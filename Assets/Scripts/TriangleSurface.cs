@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.Serialization;
+using System.Globalization;
 
 public class TriangleSurface : MonoBehaviour
 {
@@ -16,10 +17,10 @@ public class TriangleSurface : MonoBehaviour
     {
         _mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = _mesh;
-        //CreateShape();
+        CreateShape();
         
-        ReadVertices("Vertices.txt");
-        ReadTriangles("Triangles.txt");
+        //ReadVertices("Vertices.txt");
+        //ReadTriangles("Triangles.txt");
         
         UpdateMesh();
     }
@@ -48,6 +49,9 @@ public class TriangleSurface : MonoBehaviour
                 // Size of array is the first element
                 int arraySize = int.Parse(text[0]);
                 
+                // Use: '.' as decimal separator instead of ','
+                CultureInfo cultureInfo = new CultureInfo("en-US");
+
                 for (int i = 1; i <= arraySize; i++)
                 {
                     if (i < text.Length)
@@ -56,9 +60,9 @@ public class TriangleSurface : MonoBehaviour
 
                         if (strValues.Length == 3)
                         {
-                            float x = float.Parse(strValues[0]);
-                            float y = float.Parse(strValues[1]);
-                            float z = float.Parse(strValues[2]);
+                            float x = float.Parse(strValues[0], cultureInfo);
+                            float y = float.Parse(strValues[1], cultureInfo);
+                            float z = float.Parse(strValues[2], cultureInfo);
 
                             Vector3 vertex = new Vector3(x, y, z);
                             vectorList.Add(vertex);
