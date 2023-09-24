@@ -9,7 +9,7 @@ using UnityEngine.Serialization;
 public class RollingBall : MonoBehaviour
 {
     private float _radius = 0.015f;
-    public TriangleSurface meshGenerator;
+    public TriangleSurface triangleSurface;
 
     [FormerlySerializedAs("_currentVelocity")] [SerializeField] private Vector3 currentVelocity;
     private Vector3 _previousVelocity;
@@ -20,12 +20,14 @@ public class RollingBall : MonoBehaviour
     private int _currentTriangle;
     private int _previousTriangle;
 
-    private Vector3 _currentNormal;
+    [FormerlySerializedAs("_currentNormal")] [SerializeField] private Vector3 currentNormal;
     private Vector3 _previousNormal;
 
     public float xStart = 0.06f;
     public float zStart = 0.03f;
 
+    [SerializeField] private float elapsedTime;
+    
     private void Awake()
     {
         transform.localScale = Vector3.one * _radius * 2;
@@ -34,7 +36,7 @@ public class RollingBall : MonoBehaviour
     private void Start()
     {
         // Set initial height
-        var yStart = meshGenerator.GetSurfaceHeight(new Vector2(xStart, zStart));
+        var yStart = triangleSurface.GetSurfaceHeight(new Vector2(xStart, zStart));
         currentPos = new Vector3(xStart, yStart + _radius, zStart);
         _previousPos = currentPos;
 
@@ -43,7 +45,7 @@ public class RollingBall : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (meshGenerator)
+        if (triangleSurface)
         {
             Move();
         }
@@ -52,12 +54,12 @@ public class RollingBall : MonoBehaviour
     void Move()
     {
         // Iterate through each triangle 
-        for (int i = 0; i < meshGenerator.triangles.Length; i += 3)
+        for (int i = 0; i < triangleSurface.triangles.Length; i += 3)
         {
             // Find the vertices of the triangle
-            Vector3 p0 = meshGenerator.vertices[meshGenerator.triangles[i]];
-            Vector3 p1 = meshGenerator.vertices[meshGenerator.triangles[i + 1]];
-            Vector3 p2 = meshGenerator.vertices[meshGenerator.triangles[i + 2]];
+            Vector3 p0 = triangleSurface.vertices[triangleSurface.triangles[i]];
+            Vector3 p1 = triangleSurface.vertices[triangleSurface.triangles[i + 1]];
+            Vector3 p2 = triangleSurface.vertices[triangleSurface.triangles[i + 2]];
 
             // Find the balls position in the xz-plane
             Vector2 pos = new Vector2(currentPos.x, currentPos.z);
@@ -72,17 +74,20 @@ public class RollingBall : MonoBehaviour
             
             if (baryCoords is { x: >= 0.0f, y: >= 0.0f, z: >= 0.0f })
             {
+                elapsedTime += Time.fixedDeltaTime;
                 // Current triangle index
                 _currentTriangle = i / 3;
                 // Calculate normal vector
-                _currentNormal = Vector3.Cross(p1 - p0, p2 - p0).normalized;
+                currentNormal = Vector3.Cross(p1 - p0, p2 - p0).normalized;
                 // Calculate acceleration vector
-                var acceleration = new Vector3(_currentNormal.x * _currentNormal.y, 
-                    _currentNormal.y * _currentNormal.y - 1, 
-                    _currentNormal.z * _currentNormal.y) * -Physics.gravity.y;
+                var acceleration = new Vector3(currentNormal.x * currentNormal.y, 
+                    currentNormal.y * currentNormal.y - 1, 
+                    currentNormal.z * currentNormal.y) * -Physics.gravity.y;
+                Debug.Log(acceleration.magnitude);
                 // Update velocity
                 currentVelocity = _previousVelocity + acceleration * Time.fixedDeltaTime;
                 _previousVelocity = currentVelocity;
+                Debug.Log(currentVelocity.magnitude);
                 // Update position
                 currentPos = _previousPos + currentVelocity * Time.fixedDeltaTime;
                 _previousPos = currentPos;
@@ -93,7 +98,7 @@ public class RollingBall : MonoBehaviour
                     // COLLISION: The ball is on a new triangle
                     
                     // Calculate the normal (n) of the collision plane
-                    var n = (_previousNormal + _currentNormal).normalized;
+                    var n = (_previousNormal + currentNormal).normalized;
                     
                     // Update the velocity vector r = v − 2(v · n)n
                     var velocityAfter = _previousVelocity - 2 * Vector3.Dot(_previousVelocity, n) * n;
@@ -109,11 +114,11 @@ public class RollingBall : MonoBehaviour
                 
                 // Update triangle index and normal
                 _previousTriangle = _currentTriangle;
-                _previousNormal = _currentNormal;
+                _previousNormal = currentNormal;
             }
         }
-        // Basic area check to verify that the ball is on the plane
-        if (currentPos.x < -1.0 || currentPos.x > 0.8 ||
+        //Basic area check to verify that the ball is on the plane
+        if (currentPos.x < 0.0 || currentPos.x > 0.8 ||
             currentPos.z < 0.0 || currentPos.z > 0.4)
         {
             FreeFall();
@@ -128,14 +133,14 @@ public class RollingBall : MonoBehaviour
     {
         // Find the point on the ground directly under the center of the ball
         var point = new Vector3(currentPos.x, 
-            meshGenerator.GetSurfaceHeight(new Vector2(currentPos.x, currentPos.z)), 
+            triangleSurface.GetSurfaceHeight(new Vector2(currentPos.x, currentPos.z)), 
             currentPos.z);
         
         // if the edge of the ball is under the plane
         if (currentPos.y -_radius < point.y)
         {
             // Update position (distance of radius in the direction of the normal)
-            currentPos = point + _radius * _currentNormal;
+            currentPos = point + _radius * currentNormal;
             transform.position = currentPos;
         }
     }

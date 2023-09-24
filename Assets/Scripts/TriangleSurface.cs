@@ -16,9 +16,11 @@ public class TriangleSurface : MonoBehaviour
     {
         _mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = _mesh;
+        //CreateShape();
         
         ReadVertices("Vertices.txt");
         ReadTriangles("Triangles.txt");
+        
         UpdateMesh();
     }
     
@@ -45,7 +47,7 @@ public class TriangleSurface : MonoBehaviour
             {
                 // Size of array is the first element
                 int arraySize = int.Parse(text[0]);
-
+                
                 for (int i = 1; i <= arraySize; i++)
                 {
                     if (i < text.Length)
@@ -172,7 +174,7 @@ public class TriangleSurface : MonoBehaviour
     {
         vertices = new Vector3[]
         {
-            new(0.0f, 0.097f, 0.0f),
+            new(0.01f, 0.097f, 0.0f),
             new(0.4f, 0.005f, 0.0f),
             new(0.0f, 0.005f, 0.4f),
             new(0.4f, 0.075f, 0.4f),
@@ -183,9 +185,9 @@ public class TriangleSurface : MonoBehaviour
         triangles = new[]
         {
             2, 1, 0,
-            2, 3, 1,
-            4, 1, 3,
-            1, 4, 5
+            // 2, 3, 1,
+            // 4, 1, 3,
+            // 1, 4, 5
         };
     }
 }
