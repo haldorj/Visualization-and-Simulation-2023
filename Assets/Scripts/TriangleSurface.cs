@@ -17,10 +17,10 @@ public class TriangleSurface : MonoBehaviour
     {
         _mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = _mesh;
-        CreateShape();
+        //CreateShape();
         
-        //ReadVertices("Vertices.txt");
-        //ReadTriangles("Triangles.txt");
+        ReadVertices("Vertices.txt");
+        ReadTriangles("Triangles.txt");
         
         UpdateMesh();
     }
