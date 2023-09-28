@@ -8,8 +8,8 @@ using UnityEngine.Serialization;
 public class BSplineCurve : MonoBehaviour
 {
     [SerializeField] public List<Vector3> controlPoints = new(); // The controlPoints (c)
-    [SerializeField] private int degree = 2; // The degree of the polynomial (d)
-    [SerializeField] private float[] knots; // Knot vector (t)
+    [SerializeField] private float[] knots; // array storing knots (t)
+    private const int Degree = 2; // The degree of the polynomial (d)
 
     public GameObject obj;
 
@@ -43,14 +43,14 @@ public class BSplineCurve : MonoBehaviour
     {
         int my = FindKnotinterval(x);
 
-        Vector3[] a = new Vector3[degree + 1];
+        Vector3[] a = new Vector3[Degree + 1];
 
-        for (int j = 0; j <= degree; j++)
+        for (int j = 0; j <= Degree; j++)
         {
-            a[degree - j] = controlPoints[my - j];
+            a[Degree - j] = controlPoints[my - j];
         }
 
-        for (int k = degree; k > 0; k--)
+        for (int k = Degree; k > 0; k--)
         {
             int j = my - k;
             for (int i = 0; i < k; i++)
@@ -68,7 +68,7 @@ public class BSplineCurve : MonoBehaviour
         int my = controlPoints.Count - 1; // index of last control point
 
         // Separate the conditions
-        while (my >= 0 && my < knots.Length && x < knots[my] && my > degree)
+        while (my >= 0 && my < knots.Length && x < knots[my] && my > Degree)
             my--;
 
         return my;
@@ -79,8 +79,6 @@ public class BSplineCurve : MonoBehaviour
         Vector3 current;        // Current pos
         Vector3 next;           // Next pos
         Vector3 trajectory;     // Trajectory we will move in (Current - Next)
-        
-        Debug.Log(_tValue);
         
         if (_forward) // move forwards
         {
@@ -124,7 +122,7 @@ public class BSplineCurve : MonoBehaviour
             }
         }
     }
-
+    
     private void OnDrawGizmos()
     {
         foreach (var point in controlPoints)
@@ -138,9 +136,9 @@ public class BSplineCurve : MonoBehaviour
             Gizmos.color = Color.green;
             Gizmos.DrawLine(controlPoints[i], controlPoints[i + 1]);
         }
-        
-        #if UNITY_EDITOR
-        if (knots != null)
+
+
+        if (knots.Length > 0)
         {
             var prev = EvaluateBSplineSimple(Tmin);
             for (var t = Tmin + H; t <= Tmax; t += H)
@@ -151,6 +149,5 @@ public class BSplineCurve : MonoBehaviour
                 prev = current;
             }
         }
-        #endif
     }
 }
