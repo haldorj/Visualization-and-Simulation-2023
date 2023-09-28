@@ -660,8 +660,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   triangleSurface: {fileID: 1002569321}
+  accelerationVector: {x: 0, y: 0, z: 0}
+  acceleration: 0
   currentVelocity: {x: 0, y: 0, z: 0}
   currentPos: {x: 0, y: 0, z: 0}
+  currentTriangle: 0
   currentNormal: {x: 0, y: 0, z: 0}
   xStart: 0.01
   zStart: 0

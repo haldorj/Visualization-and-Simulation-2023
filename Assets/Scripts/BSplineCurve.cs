@@ -14,7 +14,11 @@ public class BSplineCurve : MonoBehaviour
     public GameObject obj;
 
     private bool _forward;
-    private float _npcMoveValue;
+    private float _tValue;
+
+    private const float H = 0.05f;
+    private const float Tmin = 0.0f;
+    private const float Tmax = 3.0f;
 
     private void Awake()
     {
@@ -76,42 +80,46 @@ public class BSplineCurve : MonoBehaviour
         Vector3 next;           // Next pos
         Vector3 trajectory;     // Trajectory we will move in (Current - Next)
         
-        Debug.Log(_npcMoveValue);
+        Debug.Log(_tValue);
         
         if (_forward) // move forwards
         {
-            if (_npcMoveValue < 1) // while t < 1
+            if (_tValue < Tmax)
             {
-                current = EvaluateBSplineSimple(_npcMoveValue);
-                _npcMoveValue += dt;
-                next = EvaluateBSplineSimple(_npcMoveValue);
+                current = EvaluateBSplineSimple(_tValue);
+                _tValue += dt;
+                next = EvaluateBSplineSimple(_tValue);
 
                 trajectory = next - current;
 
-                obj.transform.position = trajectory;
+                obj.transform.position += trajectory;
                 
             }
-            if (_npcMoveValue >= 1)
+            if (_tValue >= Tmax)
             {
-                _npcMoveValue = 1;
+                // Correct position
+                _tValue = Tmax;
+                obj.transform.position = EvaluateBSplineSimple(Tmax);
                 _forward = !_forward;
             }
         }
         else // move backwards
         {
-            if (_npcMoveValue > 0) // while t > 0
+            if (_tValue > Tmin)
             {
-                current = EvaluateBSplineSimple(_npcMoveValue);
-                _npcMoveValue -= dt;
-                next = EvaluateBSplineSimple(_npcMoveValue);
+                current = EvaluateBSplineSimple(_tValue);
+                _tValue -= dt;
+                next = EvaluateBSplineSimple(_tValue);
 
                 trajectory = next - current;
                 
-                obj.transform.position = trajectory;
+                obj.transform.position += trajectory;
             }
-            if (_npcMoveValue <= 0)
+            if (_tValue <= Tmin)
             {
-                _npcMoveValue = 0;
+                // Correct position
+                _tValue = Tmin;
+                obj.transform.position = EvaluateBSplineSimple(Tmin);
                 _forward = !_forward;
             }
         }
@@ -131,14 +139,18 @@ public class BSplineCurve : MonoBehaviour
             Gizmos.DrawLine(controlPoints[i], controlPoints[i + 1]);
         }
         
-        float h = 0.05f, tmin = 0.0f, tmax = 1.0f;
-        var prev = EvaluateBSplineSimple(tmin);
-        for (var t = tmin + h; t <= tmax; t += h)
+        #if UNITY_EDITOR
+        if (knots != null)
         {
-            var current = EvaluateBSplineSimple(t);
-            Gizmos.color = Color.cyan;
-            Gizmos.DrawLine(prev, current);
-            prev = current;
+            var prev = EvaluateBSplineSimple(Tmin);
+            for (var t = Tmin + H; t <= Tmax; t += H)
+            {
+                var current = EvaluateBSplineSimple(t);
+                Gizmos.color = Color.cyan;
+                Gizmos.DrawLine(prev, current);
+                prev = current;
+            }
         }
+        #endif
     }
 }
