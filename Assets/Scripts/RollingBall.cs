@@ -20,7 +20,7 @@ public class RollingBall : MonoBehaviour
     [FormerlySerializedAs("_currentPos")] [SerializeField] private Vector3 currentPos;
     private Vector3 _previousPos;
     
-    private int _currentTriangle;
+    [FormerlySerializedAs("_currentTriangle")] [SerializeField]private int currentTriangle;
     private int _previousTriangle;
 
     [FormerlySerializedAs("_currentNormal")] [SerializeField] private Vector3 currentNormal;
@@ -30,6 +30,8 @@ public class RollingBall : MonoBehaviour
     public float zStart = 0.03f;
 
     [SerializeField] private float elapsedTime;
+
+    private Vector3 start;
     
     private void Awake()
     {
@@ -41,6 +43,8 @@ public class RollingBall : MonoBehaviour
         // Set initial height
         var yStart = triangleSurface.GetSurfaceHeight(new Vector2(xStart, zStart));
         currentPos = new Vector3(xStart, yStart + _radius, zStart);
+        start = new Vector3(xStart, yStart, zStart);
+        
         _previousPos = currentPos;
 
         transform.position = currentPos;
@@ -83,7 +87,7 @@ public class RollingBall : MonoBehaviour
                 
                 elapsedTime += Time.fixedDeltaTime;
                 // Current triangle index
-                _currentTriangle = i / 3;
+                currentTriangle = i / 3;
                 // Calculate normal vector
                 
                 // Debug.Log("a: "+(p1 - p0).ToString("F4"));
@@ -101,17 +105,17 @@ public class RollingBall : MonoBehaviour
                 currentVelocity = _previousVelocity + accelerationVector * Time.fixedDeltaTime;
                 _previousVelocity = currentVelocity;
 
-                //Debug.Log(currentVelocity.magnitude);
+                //Debug.Log("Velocity: " + currentVelocity.magnitude);
                 
                 // Update position
                 currentPos = _previousPos + currentVelocity * Time.fixedDeltaTime;
                 _previousPos = currentPos;
                 transform.position = currentPos;
 
-                float distanceTraveled = (currentPos - new Vector3(0.01f, 0.097f - _radius, 0.0f)).magnitude;
-                Debug.Log("distanceTraveled: "+ distanceTraveled);
+                // float distanceTraveled = (new Vector3(_previousPos.x, _previousPos.y-_radius, _previousPos.z) - start).magnitude;
+                // Debug.Log("distanceTraveled: "+ distanceTraveled);
 
-                if (_currentTriangle != _previousTriangle)
+                if (currentTriangle != _previousTriangle)
                 {
                     // COLLISION: The ball is on a new triangle
                     
@@ -131,7 +135,7 @@ public class RollingBall : MonoBehaviour
                 }
                 
                 // Update triangle index and normal
-                _previousTriangle = _currentTriangle;
+                _previousTriangle = currentTriangle;
                 _previousNormal = currentNormal;
             }
         }
