@@ -7,7 +7,7 @@ using UnityEngine.Serialization;
 
 public class BSplineCurve : MonoBehaviour
 {
-    [SerializeField] public List<Vector3> controlPoints = new(); // The controlPoints (c)
+    [SerializeField] public List<Vector3> controlPoints = new(); // The controlPoints (c) add these in editor.
     [SerializeField] private float[] knots; // array storing knots (t)
     private const int Degree = 2; // The degree of the polynomial (d)
 
@@ -17,15 +17,28 @@ public class BSplineCurve : MonoBehaviour
     private float _tValue;
 
     private const float H = 0.05f;
-    private const float Tmin = 0.0f;
-    private const float Tmax = 3.0f;
-
+    private float _tmin = 0.0f;
+    private float _tmax;
+    
     private void Awake()
     {
-        knots = new float[]
+        if (Degree == 2)
         {
-            0, 0, 0, 1, 2, 3, 3, 3
-        };
+            knots = new float[]
+            {
+                0, 0, 0, 1, 2, 3, 4, 4, 4 //2nd
+            };
+            _tmax = 4.0f;
+        }
+
+        if (Degree == 3)
+        {
+            knots = new float[]
+            {
+                0, 0, 0, 0, 1, 2, 3, 3, 3, 3 //3rd
+            };
+            _tmax = 3.0f;
+        }
     }
 
     private void Start()
@@ -36,12 +49,12 @@ public class BSplineCurve : MonoBehaviour
 
     private void FixedUpdate()
     {
-        MoveNPC(Time.fixedDeltaTime);
+        MoveNpc(Time.fixedDeltaTime);
     }
 
     private Vector3 EvaluateBSplineSimple(float x)
     {
-        int my = FindKnotinterval(x);
+        int my = FindKnotInterval(x);
 
         Vector3[] a = new Vector3[Degree + 1];
 
@@ -63,7 +76,7 @@ public class BSplineCurve : MonoBehaviour
         return a[0];
     }
 
-    private int FindKnotinterval(float x)
+    private int FindKnotInterval(float x)
     {
         int my = controlPoints.Count - 1; // index of last control point
 
@@ -74,7 +87,7 @@ public class BSplineCurve : MonoBehaviour
         return my;
     }
 
-    void MoveNPC(float dt)
+    void MoveNpc(float dt)
     {
         Vector3 current;        // Current pos
         Vector3 next;           // Next pos
@@ -82,7 +95,7 @@ public class BSplineCurve : MonoBehaviour
         
         if (_forward) // move forwards
         {
-            if (_tValue < Tmax)
+            if (_tValue < _tmax)
             {
                 current = EvaluateBSplineSimple(_tValue);
                 _tValue += dt;
@@ -93,17 +106,16 @@ public class BSplineCurve : MonoBehaviour
                 obj.transform.position += trajectory;
                 
             }
-            if (_tValue >= Tmax)
-            {
-                // Correct position
-                _tValue = Tmax;
-                obj.transform.position = EvaluateBSplineSimple(Tmax);
-                _forward = !_forward;
-            }
+
+            if (!(_tValue >= _tmax)) return;
+            // Correct position
+            _tValue = _tmax;
+            obj.transform.position = EvaluateBSplineSimple(_tmax);
+            _forward = !_forward;
         }
         else // move backwards
         {
-            if (_tValue > Tmin)
+            if (_tValue > _tmin)
             {
                 current = EvaluateBSplineSimple(_tValue);
                 _tValue -= dt;
@@ -113,13 +125,12 @@ public class BSplineCurve : MonoBehaviour
                 
                 obj.transform.position += trajectory;
             }
-            if (_tValue <= Tmin)
-            {
-                // Correct position
-                _tValue = Tmin;
-                obj.transform.position = EvaluateBSplineSimple(Tmin);
-                _forward = !_forward;
-            }
+
+            if (!(_tValue <= _tmin)) return;
+            // Correct position
+            _tValue = _tmin;
+            obj.transform.position = EvaluateBSplineSimple(_tmin);
+            _forward = !_forward;
         }
     }
     
@@ -137,14 +148,21 @@ public class BSplineCurve : MonoBehaviour
             Gizmos.DrawLine(controlPoints[i], controlPoints[i + 1]);
         }
 
-
         if (knots.Length > 0)
         {
-            var prev = EvaluateBSplineSimple(Tmin);
-            for (var t = Tmin + H; t <= Tmax; t += H)
+            var prev = EvaluateBSplineSimple(_tmin);
+            for (var t = _tmin + H; t <= _tmax; t += H)
             {
                 var current = EvaluateBSplineSimple(t);
-                Gizmos.color = Color.cyan;
+                if (t <= 1)
+                    Gizmos.color = Color.red;
+                else if (t <= 2)
+                    Gizmos.color = Color.yellow;
+                else if (t <= 3)
+                    Gizmos.color = Color.cyan;
+                else if (t <= 4)
+                    Gizmos.color = Color.magenta;
+                
                 Gizmos.DrawLine(prev, current);
                 prev = current;
             }
