@@ -13,13 +13,6 @@ public class PointCloudVisualizer : MonoBehaviour
     public Material material;
     public Mesh mesh;
 
-    struct MyInstanceData
-    {
-        public Matrix4x4 objectToWorld;
-        public float myOtherData;
-        public uint renderingLayerMask;
-    };
-    
     private void Start()
     {
         ReadVertices("mergedCompressedHIGH.txt");
