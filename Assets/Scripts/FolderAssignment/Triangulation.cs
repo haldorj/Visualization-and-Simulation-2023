@@ -32,8 +32,12 @@ public class Triangulation : MonoBehaviour
 
     private void Start()
     {
+        _mesh = new Mesh();
+        GetComponent<MeshFilter>().mesh = _mesh;
+        
         ReadVertices(path);
         FindExtremeValues();
+        
         ConstructMeshData();
         UpdateMesh();
     }
@@ -90,28 +94,28 @@ public class Triangulation : MonoBehaviour
         
         vertices = vectorList.ToArray();
 
+        int vert = 0;
         List<int> triangleList = new List<int>();
         
-        int vert = 0;
-        //int tris = 0;
-        // for (int index = 0, z = (int)minZ; z <= (int)maxZ; z += triangleSize)
-        // {
-            for (int x = (int)minX; x <= (int)maxX; x += triangleSize)
+        for (int z = 0; z < (int)maxZ; z+= triangleSize)
+        {
+            for (int x = 0; x < (int)maxX; x+= triangleSize)
             {
                 triangleList.Add(vert + 0);
-                triangleList.Add(vert + x + 1);
+                triangleList.Add(vert + (int)maxX/triangleSize + 1);
                 triangleList.Add(vert + 1);
                 triangleList.Add(vert + 1);
-                triangleList.Add(vert + x + 1);
-                triangleList.Add(vert + x + 2);
+                triangleList.Add(vert + (int)maxX/triangleSize + 1);
+                triangleList.Add(vert + (int)maxX/triangleSize + 2);
 
                 vert++;
-                //tris += 6;
             }
-        //     vert++;
-        // }
+            vert++;
+        }
+        
         triangles = triangleList.ToArray();
     }
+    
 
     private void OnDrawGizmos()
     {
