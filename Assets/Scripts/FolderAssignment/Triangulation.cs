@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -10,19 +9,32 @@ public class Triangulation : MonoBehaviour
 {
     private Mesh _mesh;
 
-    [FormerlySerializedAs("filePath")] public string path = "mergedCompressedHIGH.txt";
+    public string path = "mergedCompressedHIGH.txt";
 
     [SerializeField]private float minX = float.MaxValue;
     [SerializeField]private float minZ = float.MaxValue;
     [SerializeField]private float maxX = float.MinValue;
     [SerializeField]private float maxZ = float.MinValue;
 
-    public int triangleSize = 10;
+    [FormerlySerializedAs("triangleSize")] public int quadSize = 100;
     
     private Vector3[] _vertexData;
     
+    public Vector3[] corners;
     public Vector3[] vertices;
     public int[] triangles;
+
+    public struct Quad
+    {
+        public float XMax;
+        public float XMin;
+        public float ZMax;
+        public float ZMin;
+        
+        public Vector3 Center;
+    }
+
+    private List<Quad> _quads = new();
     
     struct Triangle
     {
@@ -35,9 +47,10 @@ public class Triangulation : MonoBehaviour
         _mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = _mesh;
         
-        ReadVertices(path);
+        ReadVertexData(path);
         FindExtremeValues();
-        
+        CreateQuads();
+
         ConstructMeshData();
         UpdateMesh();
     }
@@ -51,84 +64,118 @@ public class Triangulation : MonoBehaviour
         _mesh.RecalculateTangents();
         _mesh.RecalculateNormals();
     }
-
-    void FindExtremeValues()
-    {
-        // Return if the vertices array are empty or is null
-        if (_vertexData == null || _vertexData.Length <= 0) return;
-
-        // Find extreme (max & min) values
-        foreach (var vertex in _vertexData)
-        {
-            if (vertex.x < minX)
-            {
-                minX = vertex.x;
-            }
-            if (vertex.z < minZ)
-            {
-                minZ = vertex.z;
-            }
-            if (vertex.x > maxX)
-            {
-                maxX = vertex.x;
-            }
-            if (vertex.z > maxZ)
-            {
-                maxZ = vertex.z;
-            }
-        }
-    }
-
+    
     void ConstructMeshData()
     {
-        List<Vector3> vectorList = new List<Vector3>();
-        
-        for (int index = 0, z = (int)minZ; z <= (int)maxZ; z+= triangleSize)
+        List<Vector3> vertexList = new List<Vector3>();
+
+        foreach (var quad in _quads)
         {
-            for (int x = (int)minX; x <= (int)maxX; x+= triangleSize)
-            {
-                vectorList.Add(new Vector3(x, 0, z));
-                index++;
-            }
+            vertexList.Add(quad.Center);
         }
-        
-        vertices = vectorList.ToArray();
+
+        vertices = vertexList.ToArray();
 
         int vert = 0;
         List<int> triangleList = new List<int>();
         
-        for (int z = 0; z < (int)maxZ; z+= triangleSize)
+        Debug.Log(maxX/quadSize);
+        
+        for (int z = 0; z < maxZ - quadSize * 2; z+= quadSize)
         {
-            for (int x = 0; x < (int)maxX; x+= triangleSize)
+            for (int x = 0; x < (int)maxX - quadSize*2; x+= quadSize)
             {
-                triangleList.Add(vert + 0);
-                triangleList.Add(vert + (int)maxX/triangleSize + 1);
-                triangleList.Add(vert + 1);
-                triangleList.Add(vert + 1);
-                triangleList.Add(vert + (int)maxX/triangleSize + 1);
-                triangleList.Add(vert + (int)maxX/triangleSize + 2);
+                    // triangleList.Add(vert + 0);
+                    // triangleList.Add(vert + (int)maxX/quadSize);
+                    // triangleList.Add(vert + 1);
+                    // triangleList.Add(vert + 0);
+                    // triangleList.Add(vert + (int)maxX/quadSize - 1);
+                    // triangleList.Add(vert + (int)maxX/quadSize);
+                    
+                    triangleList.Add(vert + 0);
+                    triangleList.Add(vert + (int)maxX/quadSize - 1);
+                    triangleList.Add(vert + 1);
+                    triangleList.Add(vert + 1);
+                    triangleList.Add(vert + (int)maxX/quadSize - 1);
+                    triangleList.Add(vert + (int)maxX/quadSize);
 
-                vert++;
+                    vert++;
             }
             vert++;
         }
         
         triangles = triangleList.ToArray();
     }
-    
 
-    private void OnDrawGizmos()
+    void CreateQuads()
     {
-        if (vertices == null || vertices.Length <= 0) return;
-        foreach (var vertex in vertices)
+        List<Vector3> vectorList = new List<Vector3>();
+        
+        int quadXCount = (int)(maxX / quadSize);
+        int quadZCount = (int)(maxZ / quadSize);
+    
+        for (int z = 0; z < quadZCount; z++)
         {
-            Gizmos.color = Color.green;
-            Gizmos.DrawCube(vertex, Vector3.one * 5);
+            for (int x = 0; x < quadXCount; x++)
+            {
+                vectorList.Add(new Vector3(x * quadSize, 0, z * quadSize));
+
+                if (z < quadZCount - 1 && x < quadXCount - 1)
+                {
+                    Quad quad = new Quad
+                    {
+                        XMin = x * quadSize,
+                        XMax = (x + 1) * quadSize,
+                        ZMin = z * quadSize,
+                        ZMax = (z + 1) * quadSize,
+                        Center = new Vector3(x * quadSize + quadSize / 2, 0, z * quadSize + quadSize / 2)
+                    };
+                    
+                    quad.Center.y = CalculateAverageHeightInQuad(quad);
+                    
+                    _quads.Add(quad);
+                }
+            }
+            corners = vectorList.ToArray();
         }
     }
 
+    void FindExtremeValues()
+    {
+        if (_vertexData == null || _vertexData.Length == 0) return;
 
-    void ReadVertices(string filename)
+        foreach (var vertex in _vertexData)
+        {
+            minX = Mathf.Min(minX, vertex.x);
+            minZ = Mathf.Min(minZ, vertex.z);
+            maxX = Mathf.Max(maxX, vertex.x);
+            maxZ = Mathf.Max(maxZ, vertex.z);
+        }
+
+        int quadXCount = (int)(maxX / quadSize);
+        int quadZCount = (int)(maxZ / quadSize);
+        _quads = new List<Quad>(quadXCount * quadZCount);
+    }
+
+    float CalculateAverageHeightInQuad(Quad quad)
+    {
+        int pointCount = 0;
+        float totalHeight = 0;
+
+        foreach (var vertex in _vertexData)
+        {
+            if (vertex.x >= quad.XMin && vertex.x <= quad.XMax && vertex.z >= quad.ZMin && vertex.z <= quad.ZMax)
+            {
+                totalHeight += vertex.y;
+                pointCount++;
+            }
+        }
+
+        // Calculate the average height (avoid division by zero)
+        return pointCount > 0 ? totalHeight / pointCount : 0;
+    }
+
+    void ReadVertexData(string filename)
     {
         string filePath = Path.Combine(Application.streamingAssetsPath, filename);
         List<Vector3> vectorList = new List<Vector3>();
@@ -170,4 +217,20 @@ public class Triangulation : MonoBehaviour
             Debug.Log("Filepath not found: " + filePath);
         }
     }
+    
+    // private void OnDrawGizmos()
+    // {
+    //     if (corners == null || corners.Length <= 0) return;
+    //     foreach (var vertex in corners)
+    //     {
+    //         Gizmos.color = Color.green;
+    //         Gizmos.DrawCube(vertex, Vector3.one * 2);
+    //     }
+    //
+    //     foreach (var quad in _quads)
+    //     {
+    //         Gizmos.color = Color.blue;
+    //         Gizmos.DrawCube(quad.Center, Vector3.one * 5);
+    //     }
+    // }
 }

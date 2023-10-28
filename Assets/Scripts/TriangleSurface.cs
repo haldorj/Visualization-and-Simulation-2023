@@ -35,6 +35,8 @@ public class TriangleSurface : MonoBehaviour
         _mesh.RecalculateNormals();
     }
 
+    
+    
     void ReadVertices(string filename)
     {
         string filePath = Path.Combine(Application.streamingAssetsPath, filename);
