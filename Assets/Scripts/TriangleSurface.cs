@@ -121,32 +121,6 @@ public class TriangleSurface : MonoBehaviour
         }
     }
 
-    public static Vector3 BarycentricCoordinates(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 pt)
-    {
-        Vector2 p12 = p2 - p1;
-        Vector2 p13 = p3 - p1;
-        Vector3 n = Vector3.Cross(new Vector3(p12.x, 0.0f, p12.y), new Vector3(p13.x, 0.0f, p13.y));
-        float areal123 = n.magnitude;
-        Vector3 baryc = default;
-        // u
-        Vector2 p = p2 - pt;
-        Vector2 q = p3 - pt;
-        n = Vector3.Cross(new Vector3(p.x, 0.0f, p.y), new Vector3(q.x, 0.0f, q.y));
-        baryc.x = n.y / areal123;
-        // v
-        p = p3 - pt;
-        q = p1 - pt;
-        n = Vector3.Cross(new Vector3(p.x, 0.0f, p.y), new Vector3(q.x, 0.0f, q.y));
-        baryc.y = n.y / areal123;
-        // w
-        p = p1 - pt;
-        q = p2 - pt;
-        n = Vector3.Cross(new Vector3(p.x, 0.0f, p.y), new Vector3(q.x, 0.0f, q.y));
-        baryc.z = n.y / areal123;
-
-        return baryc;
-    }
-    
     public float GetSurfaceHeight(Vector2 p)
     {
         for (int i = 0; i < triangles.Length; i += 3)
@@ -174,6 +148,32 @@ public class TriangleSurface : MonoBehaviour
             }
         }
         return 0.0f;
+    }
+    
+    public static Vector3 BarycentricCoordinates(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 pt)
+    {
+        Vector2 p12 = p2 - p1;
+        Vector2 p13 = p3 - p1;
+        Vector3 n = Vector3.Cross(new Vector3(p12.x, 0.0f, p12.y), new Vector3(p13.x, 0.0f, p13.y));
+        float areal123 = n.magnitude;
+        Vector3 baryc = default;
+        // u
+        Vector2 p = p2 - pt;
+        Vector2 q = p3 - pt;
+        n = Vector3.Cross(new Vector3(p.x, 0.0f, p.y), new Vector3(q.x, 0.0f, q.y));
+        baryc.x = n.y / areal123;
+        // v
+        p = p3 - pt;
+        q = p1 - pt;
+        n = Vector3.Cross(new Vector3(p.x, 0.0f, p.y), new Vector3(q.x, 0.0f, q.y));
+        baryc.y = n.y / areal123;
+        // w
+        p = p1 - pt;
+        q = p2 - pt;
+        n = Vector3.Cross(new Vector3(p.x, 0.0f, p.y), new Vector3(q.x, 0.0f, q.y));
+        baryc.z = n.y / areal123;
+
+        return baryc;
     }
     
     void CreateShape()

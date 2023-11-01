@@ -42,7 +42,7 @@ public class Triangulation : MonoBehaviour
         private int[] _neighbours;
     }
 
-    private void Start()
+    private void Awake()
     {
         _mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = _mesh;
@@ -79,25 +79,24 @@ public class Triangulation : MonoBehaviour
         int vert = 0;
         List<int> triangleList = new List<int>();
         
-        Debug.Log(maxX/quadSize);
+        Debug.Log(maxX/quadSize - 1);
         
         for (int z = 0; z < maxZ - quadSize * 2; z+= quadSize)
         {
             for (int x = 0; x < (int)maxX - quadSize*2; x+= quadSize)
             {
-                    // triangleList.Add(vert + 0);
-                    // triangleList.Add(vert + (int)maxX/quadSize);
-                    // triangleList.Add(vert + 1);
-                    // triangleList.Add(vert + 0);
-                    // triangleList.Add(vert + (int)maxX/quadSize - 1);
-                    // triangleList.Add(vert + (int)maxX/quadSize);
+                
+                    //  2 ---- 3
+                    //  |  \   |
+                    //  |   \  |
+                    //  0 ---- 1
                     
-                    triangleList.Add(vert + 0);
-                    triangleList.Add(vert + (int)maxX/quadSize - 1);
-                    triangleList.Add(vert + 1);
-                    triangleList.Add(vert + 1);
-                    triangleList.Add(vert + (int)maxX/quadSize - 1);
-                    triangleList.Add(vert + (int)maxX/quadSize);
+                    triangleList.Add(vert + (int)maxX/quadSize - 1);    // 2
+                    triangleList.Add(vert + 1);                         // 1
+                    triangleList.Add(vert + 0);                         // 0
+                    triangleList.Add(vert + (int)maxX/quadSize - 1);    // 2
+                    triangleList.Add(vert + (int)maxX/quadSize);        // 3
+                    triangleList.Add(vert + 1);                         // 1
 
                     vert++;
             }
@@ -218,19 +217,74 @@ public class Triangulation : MonoBehaviour
         }
     }
     
-    // private void OnDrawGizmos()
-    // {
-    //     if (corners == null || corners.Length <= 0) return;
-    //     foreach (var vertex in corners)
-    //     {
-    //         Gizmos.color = Color.green;
-    //         Gizmos.DrawCube(vertex, Vector3.one * 2);
-    //     }
-    //
-    //     foreach (var quad in _quads)
-    //     {
-    //         Gizmos.color = Color.blue;
-    //         Gizmos.DrawCube(quad.Center, Vector3.one * 5);
-    //     }
-    // }
+    public float GetSurfaceHeight(Vector2 p)
+    {
+        for (int i = 0; i < triangles.Length; i += 3)
+        {
+            Vector3 p0 = vertices[triangles[i]];
+            Vector3 p1 = vertices[triangles[i + 1]];
+            Vector3 p2 = vertices[triangles[i + 2]];
+            
+            Vector3 baryCoords = BarycentricCoordinates(
+                new Vector2(p0.x, p0.z), 
+                new Vector2(p1.x, p1.z),  
+                new Vector2(p2.x, p2.z),  
+                p
+            );
+            
+            // Check if the player's position is inside the triangle.
+            if (baryCoords is { x: >= 0.0f, y: >= 0.0f, z: >= 0.0f })
+            {
+                // The player's position is inside the triangle.
+                // Calculate the height of the surface at the player's position.
+                float height = baryCoords.x * p0.y + baryCoords.y * p1.y + baryCoords.z * p2.y;
+                
+                // Return the height as the height of the surface at the player's position.
+                return height;
+            }
+        }
+        return 0.0f;
+    }
+    
+    public static Vector3 BarycentricCoordinates(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 pt)
+    {
+        Vector2 p12 = p2 - p1;
+        Vector2 p13 = p3 - p1;
+        Vector3 n = Vector3.Cross(new Vector3(p12.x, 0.0f, p12.y), new Vector3(p13.x, 0.0f, p13.y));
+        float areal123 = n.magnitude;
+        Vector3 baryc = default;
+        // u
+        Vector2 p = p2 - pt;
+        Vector2 q = p3 - pt;
+        n = Vector3.Cross(new Vector3(p.x, 0.0f, p.y), new Vector3(q.x, 0.0f, q.y));
+        baryc.x = n.y / areal123;
+        // v
+        p = p3 - pt;
+        q = p1 - pt;
+        n = Vector3.Cross(new Vector3(p.x, 0.0f, p.y), new Vector3(q.x, 0.0f, q.y));
+        baryc.y = n.y / areal123;
+        // w
+        p = p1 - pt;
+        q = p2 - pt;
+        n = Vector3.Cross(new Vector3(p.x, 0.0f, p.y), new Vector3(q.x, 0.0f, q.y));
+        baryc.z = n.y / areal123;
+
+        return baryc;
+    }
+    
+    private void OnDrawGizmos()
+    {
+        if (corners == null || corners.Length <= 0) return;
+        foreach (var vertex in corners)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawCube(vertex, Vector3.one * 2);
+        }
+    
+        foreach (var quad in _quads)
+        {
+            Gizmos.color = Color.blue;
+            Gizmos.DrawCube(quad.Center, Vector3.one * 5);
+        }
+    }
 }

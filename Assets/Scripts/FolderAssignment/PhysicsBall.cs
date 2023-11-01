@@ -6,24 +6,25 @@ using UnityEngine;
 using UnityEngine.Serialization;
 
 
-public class RollingBall : MonoBehaviour
+public class PhysicsBall : MonoBehaviour
 {
-    private float _radius = 0.015f;
-    public TriangleSurface triangleSurface;
-
-    [FormerlySerializedAs("acceleration")] [SerializeField] private Vector3 accelerationVector;
+    [SerializeField]private float radius = 0.015f;
+    //public TriangleSurface triangleSurface;
+    public Triangulation surface;
+    
+    [SerializeField] private Vector3 accelerationVector;
     [SerializeField] private float acceleration;
     
-    [FormerlySerializedAs("_currentVelocity")] [SerializeField] private Vector3 currentVelocity;
+    [SerializeField] private Vector3 currentVelocity;
     private Vector3 _previousVelocity;
     
-    [FormerlySerializedAs("_currentPos")] [SerializeField] private Vector3 currentPos;
+    [SerializeField] private Vector3 currentPos;
     private Vector3 _previousPos;
     
-    [FormerlySerializedAs("_currentTriangle")] [SerializeField]private int currentTriangle;
+    [SerializeField]private int currentTriangle;
     private int _previousTriangle;
 
-    [FormerlySerializedAs("_currentNormal")] [SerializeField] private Vector3 currentNormal;
+    [SerializeField] private Vector3 currentNormal;
     private Vector3 _previousNormal;
 
     public float xStart = 0.06f;
@@ -35,14 +36,17 @@ public class RollingBall : MonoBehaviour
     
     private void Awake()
     {
-        transform.localScale = Vector3.one * _radius * 2;
+        radius = transform.localScale.z / 2;
+
+        xStart = transform.position.x;
+        zStart = transform.position.z;
     }
 
     private void Start()
     {
         // Set initial height
-        var yStart = triangleSurface.GetSurfaceHeight(new Vector2(xStart, zStart));
-        currentPos = new Vector3(xStart, yStart + _radius, zStart);
+        var yStart = surface.GetSurfaceHeight(new Vector2(xStart, zStart));
+        currentPos = new Vector3(xStart, yStart + radius, zStart);
         start = new Vector3(xStart, yStart, zStart);
         
         _previousPos = currentPos;
@@ -52,7 +56,7 @@ public class RollingBall : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (triangleSurface)
+        if (surface)
         {
             Move();
         }
@@ -61,12 +65,12 @@ public class RollingBall : MonoBehaviour
     void Move()
     {
         // Iterate through each triangle 
-        for (int i = 0; i < triangleSurface.triangles.Length; i += 3)
+        for (int i = 0; i < surface.triangles.Length; i += 3)
         {
             // Find the vertices of the triangle
-            Vector3 p0 = triangleSurface.vertices[triangleSurface.triangles[i]];
-            Vector3 p1 = triangleSurface.vertices[triangleSurface.triangles[i + 1]];
-            Vector3 p2 = triangleSurface.vertices[triangleSurface.triangles[i + 2]];
+            Vector3 p0 = surface.vertices[surface.triangles[i]];
+            Vector3 p1 = surface.vertices[surface.triangles[i + 1]];
+            Vector3 p2 = surface.vertices[surface.triangles[i + 2]];
 
             // Find the balls position in the xz-plane
             Vector2 pos = new Vector2(currentPos.x, currentPos.z);
@@ -140,14 +144,14 @@ public class RollingBall : MonoBehaviour
             }
         }
         //Basic area check to verify that the ball is on the plane
-        if (currentPos.x < 0.0 || currentPos.x > 0.8 ||
-            currentPos.z < 0.0 || currentPos.z > 0.4)
+        if (currentPos.x < 0.0 || currentPos.x > 2325 ||
+            currentPos.z < 0.0 || currentPos.z > 1725)
         {
             FreeFall();
         }
         else
         {
-            Correction();
+            CorrectionNew();
         }
     }
 
@@ -155,14 +159,36 @@ public class RollingBall : MonoBehaviour
     {
         // Find the point on the ground directly under the center of the ball
         var point = new Vector3(currentPos.x, 
-            triangleSurface.GetSurfaceHeight(new Vector2(currentPos.x, currentPos.z)), 
+            surface.GetSurfaceHeight(new Vector2(currentPos.x, currentPos.z)), 
             currentPos.z);
         
         // if the edge of the ball is under the plane
-        if (currentPos.y -_radius < point.y)
+        if (currentPos.y - radius < point.y)
         {
             // Update position (distance of radius in the direction of the normal)
-            currentPos = point + _radius * currentNormal;
+            currentPos = point + radius * currentNormal;
+            transform.position = currentPos;
+        }
+    }
+    
+    void CorrectionNew()
+    {
+        // Find the point on the ground directly under the center of the ball
+        var point = new Vector3(currentPos.x, 
+            surface.GetSurfaceHeight(new Vector2(currentPos.x, currentPos.z)), 
+            currentPos.z);
+
+        var dist = transform.position - point;
+
+        var b = Vector3.Dot(dist, currentNormal) * currentNormal;
+
+        var k = transform.position + b;
+
+        // if the edge of the ball is under the plane
+        if (currentPos.y - radius < k.y)
+        {
+            // Update position (distance of radius in the direction of the normal)
+            currentPos = k + radius * currentNormal;
             transform.position = currentPos;
         }
     }
@@ -184,8 +210,5 @@ public class RollingBall : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
-        // Draw a yellow sphere at the transform's position
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawSphere(transform.position, _radius + 0.001f);
     }
 }

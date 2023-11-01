@@ -639,7 +639,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2118760888}
-  - component: {fileID: 2118760887}
+  - component: {fileID: 2118760889}
   m_Layer: 0
   m_Name: Ball
   m_TagString: Untagged
@@ -647,28 +647,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &2118760887
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2118760886}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f5c87deed83f8e643b2eda68ff389585, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  triangleSurface: {fileID: 1002569321}
-  accelerationVector: {x: 0, y: 0, z: 0}
-  acceleration: 0
-  currentVelocity: {x: 0, y: 0, z: 0}
-  currentPos: {x: 0, y: 0, z: 0}
-  currentTriangle: 0
-  currentNormal: {x: 0, y: 0, z: 0}
-  xStart: 0.01
-  zStart: 0
-  elapsedTime: 0
 --- !u!4 &2118760888
 Transform:
   m_ObjectHideFlags: 0
@@ -685,6 +663,28 @@ Transform:
   - {fileID: 1533562231}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2118760889
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2118760886}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ec64764c8e511a4ca3f934347eb6295, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  triangleSurface: {fileID: 1002569321}
+  accelerationVector: {x: 0, y: 0, z: 0}
+  acceleration: 0
+  currentVelocity: {x: 0, y: 0, z: 0}
+  currentPos: {x: 0, y: 0, z: 0}
+  currentTriangle: 0
+  currentNormal: {x: 0, y: 0, z: 0}
+  xStart: 0.06
+  zStart: 0.03
+  elapsedTime: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
