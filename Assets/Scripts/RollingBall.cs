@@ -32,6 +32,9 @@ public class RollingBall : MonoBehaviour
     [SerializeField] private float elapsedTime;
 
     private Vector3 start;
+
+    private Vector3 k;
+    private Vector3 b;
     
     private void Awake()
     {
@@ -147,7 +150,7 @@ public class RollingBall : MonoBehaviour
         }
         else
         {
-            Correction();
+            CorrectionNew();
         }
     }
 
@@ -157,9 +160,31 @@ public class RollingBall : MonoBehaviour
         var point = new Vector3(currentPos.x, 
             triangleSurface.GetSurfaceHeight(new Vector2(currentPos.x, currentPos.z)), 
             currentPos.z);
+
+        var dist = currentPos - point;
+        
+        b = Vector3.Dot(dist, currentNormal) * currentNormal;
+
+        k = transform.position + b;
+
+        // if the edge of the ball is under the plane
+        if (b.magnitude >= _radius)
+        {
+            // Update position (distance of radius in the direction of the normal)
+            currentPos = k + _radius * currentNormal;
+            transform.position = currentPos;
+        }
+    }
+    
+    void CorrectionNew()
+    {
+        // Find the point on the ground directly under the center of the ball
+        var point = new Vector3(currentPos.x, 
+            triangleSurface.GetSurfaceHeight(new Vector2(currentPos.x, currentPos.z)), 
+            currentPos.z);
         
         // if the edge of the ball is under the plane
-        if (currentPos.y -_radius < point.y)
+        if (currentPos.y - _radius < point.y)
         {
             // Update position (distance of radius in the direction of the normal)
             currentPos = point + _radius * currentNormal;
@@ -182,10 +207,15 @@ public class RollingBall : MonoBehaviour
         }
     }
 
-    void OnDrawGizmosSelected()
+    void OnDrawGizmos()
     {
         // Draw a yellow sphere at the transform's position
         Gizmos.color = Color.yellow;
-        Gizmos.DrawSphere(transform.position, _radius + 0.001f);
+        //Gizmos.DrawSphere(transform.position, _radius + 0.001f);
+        
+        Gizmos.color = Color.red;
+        //Gizmos.DrawCube(k, Vector3.one * 0.02f);
+        
+        Gizmos.DrawLine(currentPos, currentPos + b);
     }
 }

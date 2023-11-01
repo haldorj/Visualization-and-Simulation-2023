@@ -33,7 +33,7 @@ public class PhysicsBall : MonoBehaviour
     [SerializeField] private float elapsedTime;
 
     private Vector3 start;
-    
+
     private void Awake()
     {
         radius = transform.localScale.z / 2;
@@ -116,8 +116,8 @@ public class PhysicsBall : MonoBehaviour
                 _previousPos = currentPos;
                 transform.position = currentPos;
 
-                // float distanceTraveled = (new Vector3(_previousPos.x, _previousPos.y-_radius, _previousPos.z) - start).magnitude;
-                // Debug.Log("distanceTraveled: "+ distanceTraveled);
+                float distanceTraveled = (new Vector3(_previousPos.x, _previousPos.y-radius, _previousPos.z) - start).magnitude;
+                Debug.Log("distanceTraveled: "+ distanceTraveled);
 
                 if (currentTriangle != _previousTriangle)
                 {
@@ -125,6 +125,8 @@ public class PhysicsBall : MonoBehaviour
                     
                     // Calculate the normal (n) of the collision plane
                     var n = (_previousNormal + currentNormal).normalized;
+
+                    Correction(n);
                     
                     // Update the velocity vector r = v − 2(v · n)n
                     var velocityAfter = _previousVelocity - 2 * Vector3.Dot(_previousVelocity, n) * n;
@@ -144,18 +146,18 @@ public class PhysicsBall : MonoBehaviour
             }
         }
         //Basic area check to verify that the ball is on the plane
-        if (currentPos.x < 0.0 || currentPos.x > 2325 ||
-            currentPos.z < 0.0 || currentPos.z > 1725)
+        if (currentPos.x < 0.0 || currentPos.x > 230 ||
+            currentPos.z < 0.0 || currentPos.z > 170)
         {
             FreeFall();
         }
         else
         {
-            CorrectionNew();
+            //Correction(currentNormal);
         }
     }
 
-    void Correction()
+    void Correction(Vector3 normal)
     {
         // Find the point on the ground directly under the center of the ball
         var point = new Vector3(currentPos.x, 
@@ -166,36 +168,14 @@ public class PhysicsBall : MonoBehaviour
         if (currentPos.y - radius < point.y)
         {
             // Update position (distance of radius in the direction of the normal)
-            currentPos = point + radius * currentNormal;
+            currentPos = point + radius * normal;
             transform.position = currentPos;
         }
     }
     
-    void CorrectionNew()
-    {
-        // Find the point on the ground directly under the center of the ball
-        var point = new Vector3(currentPos.x, 
-            surface.GetSurfaceHeight(new Vector2(currentPos.x, currentPos.z)), 
-            currentPos.z);
-
-        var dist = transform.position - point;
-
-        var b = Vector3.Dot(dist, currentNormal) * currentNormal;
-
-        var k = transform.position + b;
-
-        // if the edge of the ball is under the plane
-        if (currentPos.y - radius < k.y)
-        {
-            // Update position (distance of radius in the direction of the normal)
-            currentPos = k + radius * currentNormal;
-            transform.position = currentPos;
-        }
-    }
-
     void FreeFall()
     {
-        if (currentPos.y > -3)
+        if (currentPos.y > -20)
         {
             // Update velocity
             currentVelocity = _previousVelocity + Physics.gravity * Time.fixedDeltaTime;
