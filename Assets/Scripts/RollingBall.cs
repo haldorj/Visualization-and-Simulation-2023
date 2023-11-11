@@ -31,7 +31,7 @@ public class RollingBall : MonoBehaviour
 
     [SerializeField] private float elapsedTime;
 
-    private Vector3 start;
+    private Vector3 _start;
 
     private Vector3 k;
     private Vector3 b;
@@ -46,7 +46,7 @@ public class RollingBall : MonoBehaviour
         // Set initial height
         var yStart = triangleSurface.GetSurfaceHeight(new Vector2(xStart, zStart));
         currentPos = new Vector3(xStart, yStart + _radius, zStart);
-        start = new Vector3(xStart, yStart, zStart);
+        _start = new Vector3(xStart, yStart, zStart);
         
         _previousPos = currentPos;
 

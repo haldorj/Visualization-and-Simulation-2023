@@ -32,8 +32,6 @@ public class PhysicsBall : MonoBehaviour
 
     [SerializeField] private float elapsedTime;
 
-    private Vector3 start;
-
     private void Awake()
     {
         radius = transform.localScale.z / 2;
@@ -47,7 +45,6 @@ public class PhysicsBall : MonoBehaviour
         // Set initial height
         var yStart = surface.GetSurfaceHeight(new Vector2(xStart, zStart));
         currentPos = new Vector3(xStart, yStart + radius, zStart);
-        start = new Vector3(xStart, yStart, zStart);
         
         _previousPos = currentPos;
 
@@ -85,20 +82,11 @@ public class PhysicsBall : MonoBehaviour
             
             if (baryCoords is { x: >= 0.0f, y: >= 0.0f, z: >= 0.0f })
             {
-                // Debug.Log("p0: "+p0.ToString("F4"));
-                // Debug.Log("p1: "+p1.ToString("F4"));
-                // Debug.Log("p2: "+p2.ToString("F4"));
-                
                 elapsedTime += Time.fixedDeltaTime;
                 // Current triangle index
                 currentTriangle = i / 3;
                 // Calculate normal vector
-                
-                // Debug.Log("a: "+(p1 - p0).ToString("F4"));
-                // Debug.Log("b: "+(p2 - p0).ToString("F4"));
-                //
-                // Debug.Log("n: "+(Vector3.Cross(p1 - p0, p2 - p0)).ToString("F4"));
-                
+
                 currentNormal = Vector3.Cross(p1 - p0, p2 - p0).normalized;
                 // Calculate acceleration vector
                 accelerationVector = new Vector3(currentNormal.x * currentNormal.y, 
@@ -116,8 +104,7 @@ public class PhysicsBall : MonoBehaviour
                 _previousPos = currentPos;
                 transform.position = currentPos;
 
-                float distanceTraveled = (new Vector3(_previousPos.x, _previousPos.y-radius, _previousPos.z) - start).magnitude;
-                Debug.Log("distanceTraveled: "+ distanceTraveled);
+                //float distanceTraveled = (new Vector3(_previousPos.x, _previousPos.y-radius, _previousPos.z) - start).magnitude;
 
                 if (currentTriangle != _previousTriangle)
                 {
@@ -147,13 +134,9 @@ public class PhysicsBall : MonoBehaviour
         }
         //Basic area check to verify that the ball is on the plane
         if (currentPos.x < 0.0 || currentPos.x > 230 ||
-            currentPos.z < 0.0 || currentPos.z > 170)
+            currentPos.z < 0.0 || currentPos.z > 170 )
         {
             FreeFall();
-        }
-        else
-        {
-            //Correction(currentNormal);
         }
     }
 
@@ -186,9 +169,5 @@ public class PhysicsBall : MonoBehaviour
 
             transform.position = currentPos;
         }
-    }
-
-    void OnDrawGizmosSelected()
-    {
     }
 }

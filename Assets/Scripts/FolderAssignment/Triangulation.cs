@@ -16,7 +16,7 @@ public class Triangulation : MonoBehaviour
     [SerializeField]private float maxX = float.MinValue;
     [SerializeField]private float maxZ = float.MinValue;
 
-    public int quadSize = 100;
+    public int quadSize = 10;
     
     private Vector3[] _vertexData;
     
@@ -78,9 +78,7 @@ public class Triangulation : MonoBehaviour
 
         int vert = 0;
         List<int> triangleList = new List<int>();
-        
-        Debug.Log(maxX/quadSize - 1);
-        
+
         for (int z = 0; z < maxZ - quadSize * 2; z+= quadSize)
         {
             for (int x = 0; x < (int)maxX - quadSize*2; x+= quadSize)
@@ -129,7 +127,7 @@ public class Triangulation : MonoBehaviour
                         ZMax = (z + 1) * quadSize,
                         Center = new Vector3(x * quadSize + quadSize / 2, 0, z * quadSize + quadSize / 2)
                     };
-                
+
                     quad.Center.y = CalculateAverageHeightInQuad(quad);
                     
                     _quads.Add(quad);
@@ -170,7 +168,8 @@ public class Triangulation : MonoBehaviour
             }
         }
 
-        // Calculate the average height (avoid division by zero)
+        // If num of points are more than zero we divide the total height on the number of points.
+        // Otherwise, return 0.
         return pointCount > 0 ? totalHeight / pointCount : 0;
     }
 
@@ -203,7 +202,7 @@ public class Triangulation : MonoBehaviour
                             float y = float.Parse(strValues[1], cultureInfo);
                             float z = float.Parse(strValues[2], cultureInfo);
                             
-                            Vector3 vertex = new Vector3(x, y, z)*0.1f;
+                            Vector3 vertex = new Vector3(x, y, z) * 0.1f;
                             vectorList.Add(vertex);
                         }
                     }
@@ -272,19 +271,19 @@ public class Triangulation : MonoBehaviour
         return baryc;
     }
     
-    // private void OnDrawGizmos()
-    // {
-    //     if (corners == null || corners.Length <= 0) return;
-    //     foreach (var vertex in corners)
-    //     {
-    //         Gizmos.color = Color.green;
-    //         Gizmos.DrawCube(vertex, Vector3.one * 2);
-    //     }
-    //
-    //     foreach (var quad in _quads)
-    //     {
-    //         Gizmos.color = Color.blue;
-    //         Gizmos.DrawCube(quad.Center, Vector3.one * 5);
-    //     }
-    // }
+    private void OnDrawGizmos()
+    {
+        if (corners == null || corners.Length <= 0) return;
+        foreach (var vertex in corners)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawCube(vertex, Vector3.one * .2f);
+        }
+    
+        foreach (var quad in _quads)
+        {
+            Gizmos.color = Color.blue;
+            Gizmos.DrawCube(quad.Center, Vector3.one * .5f);
+        }
+    }
 }
