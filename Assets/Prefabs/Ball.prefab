@@ -55,7 +55,11 @@ MonoBehaviour:
   currentNormal: {x: 0, y: 0, z: 0}
   xStart: 0.06
   zStart: 0.03
+  moving: 1
   elapsedTime: 0
+  splineExists: 0
+  controlPoints: []
+  spline: {fileID: 1848994699224732371, guid: 40dd32dabb788f247a86e25cac6a70f2, type: 3}
 --- !u!1 &4426806424927920384
 GameObject:
   m_ObjectHideFlags: 0

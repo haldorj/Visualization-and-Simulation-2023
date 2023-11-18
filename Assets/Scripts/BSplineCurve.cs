@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -22,13 +23,53 @@ public class BSplineCurve : MonoBehaviour
     
     private void Awake()
     {
+
+    }
+
+    private void Start()
+    {
+        if (controlPoints != null)
+            InitializeKnotVector();
+        
+        // initial position
+        if (obj)
+            obj.transform.position = controlPoints[0];
+    }
+
+    public void InitializeKnotVector()
+    {
         if (Degree == 2)
         {
-            knots = new float[]
+            int index = 0;
+            
+            List<float> k = new List<float>(); // knots
+
+            for (int i = 0; i <= Degree - 1; i++)
             {
-                0, 0, 0, 1, 2, 3, 4, 4, 4 //2nd
-            };
-            _tmax = 4.0f;
+                k.Add(index);
+            }
+
+            // c - d - 1
+            for (int i = 0; i < controlPoints.Count - 1; i++)
+            {
+                index++;
+                k.Add(index);
+            }
+            
+            for (int i = 0; i < Degree; i++)
+            {
+                k.Add(index);
+            }
+
+            knots = k.ToArray();
+            _tmax = k.Last();
+
+            // knots = new float[]
+            // {
+            //     0, 0, 0, 1, 2, 3, 4, 4, 4 //2nd
+            // }
+            //
+            //_tmax = 4.0f;
         }
 
         if (Degree == 3)
@@ -40,16 +81,11 @@ public class BSplineCurve : MonoBehaviour
             _tmax = 3.0f;
         }
     }
-
-    private void Start()
-    {
-        // initial position
-        obj.transform.position = controlPoints[0];
-    }
-
+    
     private void FixedUpdate()
     {
-        MoveNpc(Time.fixedDeltaTime);
+        if (obj)
+            MoveNpc(Time.fixedDeltaTime);
     }
 
     private Vector3 EvaluateBSplineSimple(float x)
@@ -136,36 +172,39 @@ public class BSplineCurve : MonoBehaviour
     
     private void OnDrawGizmos()
     {
-        foreach (var point in controlPoints)
+        if (knots.Length <= 0 || controlPoints.Count <= 0) return;
+        
+        // foreach (var point in controlPoints)
+        // {
+        //     Gizmos.color = Color.blue;
+        //     Gizmos.DrawSphere(point, 0.02f);
+        // }
+        //
+        // for (int i = 0; i < controlPoints.Capacity - 1; i++)
+        // {
+        //     Gizmos.color = Color.blue;
+        //     Gizmos.DrawLine(controlPoints[i], controlPoints[i + 1]);
+        // }
+        
+        var prev = EvaluateBSplineSimple(_tmin);
+        for (var t = _tmin + H; t <= _tmax; t += H)
         {
-            Gizmos.color = Color.green;
-            Gizmos.DrawSphere(point, 0.02f);
-        }
-
-        for (int i = 0; i < controlPoints.Capacity - 1; i++)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawLine(controlPoints[i], controlPoints[i + 1]);
-        }
-
-        if (knots.Length > 0)
-        {
-            var prev = EvaluateBSplineSimple(_tmin);
-            for (var t = _tmin + H; t <= _tmax; t += H)
-            {
-                var current = EvaluateBSplineSimple(t);
-                if (t <= 1)
-                    Gizmos.color = Color.red;
-                else if (t <= 2)
-                    Gizmos.color = Color.yellow;
-                else if (t <= 3)
-                    Gizmos.color = Color.cyan;
-                else if (t <= 4)
-                    Gizmos.color = Color.magenta;
-                
-                Gizmos.DrawLine(prev, current);
-                prev = current;
-            }
+            var current = EvaluateBSplineSimple(t);
+            /*
+            // if (t <= 1)
+            //     Gizmos.color = Color.red;
+            // else if (t <= 2)
+            //     Gizmos.color = Color.yellow;
+            // else if (t <= 3)
+            //     Gizmos.color = Color.cyan;
+            // else if (t <= 4)
+            //     Gizmos.color = Color.magenta;
+            // else
+            */
+            Gizmos.color = Color.white;
+            
+            Gizmos.DrawLine(prev, current);
+            prev = current;
         }
     }
 }

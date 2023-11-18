@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Raindrop : MonoBehaviour
@@ -28,7 +29,6 @@ public class Raindrop : MonoBehaviour
     void FixedUpdate()
     {
         FreeFall();
-        
     }
 
     private void Swap()
@@ -41,8 +41,8 @@ public class Raindrop : MonoBehaviour
         var pos = new Vector3(transform.position.x, height, transform.position.z);
         ball.surface = surface;
 
-        Instantiate(ball, pos, Quaternion.identity);
-        
+        GameObject ballPrefab = Instantiate(ball.GameObject(), pos, Quaternion.identity);
+        ballPrefab.transform.parent = transform.parent;
         
         Destroy(this);
     }

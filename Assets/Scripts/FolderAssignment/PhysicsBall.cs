@@ -9,7 +9,6 @@ using UnityEngine.Serialization;
 public class PhysicsBall : MonoBehaviour
 {
     [SerializeField]private float radius = 0.015f;
-    //public TriangleSurface triangleSurface;
     public Triangulation surface;
     
     [SerializeField] private Vector3 accelerationVector;
@@ -38,6 +37,12 @@ public class PhysicsBall : MonoBehaviour
     private float _maxX = float.MinValue;
     private float _maxZ = float.MinValue;
 
+    private float _timer;
+    [SerializeField] private bool splineExists;
+    [SerializeField] private List<Vector3> controlPoints;
+
+    [SerializeField] private BSplineCurve spline;
+
     private void Awake()
     {
         radius = transform.localScale.z / 2;
@@ -55,6 +60,8 @@ public class PhysicsBall : MonoBehaviour
         transform.position = currentPos;
 
         FindExtremeValues();
+
+        splineExists = false;
     }
 
     void FixedUpdate()
@@ -62,7 +69,32 @@ public class PhysicsBall : MonoBehaviour
         if (surface && moving)
         {
             Move();
+            
+            _timer += Time.fixedDeltaTime;
+
+            if (_timer >= 0.5f)
+            {
+                controlPoints.Add(currentPos);
+                _timer = 0;
+            }
         }
+
+        if (!moving && !splineExists)
+        {
+            controlPoints.Add(currentPos);
+            GenerateBSpline();
+        }
+    }
+
+    void GenerateBSpline()
+    {
+        spline.controlPoints = controlPoints;
+        spline.InitializeKnotVector();
+        
+        GameObject SplineGameObject = Instantiate(spline.GameObject(), Vector3.zero, Quaternion.identity);
+        //spline.transform.parent = transform;
+        SplineGameObject.transform.parent = this.transform;
+        splineExists = true;
     }
     
     void Move()
@@ -71,7 +103,6 @@ public class PhysicsBall : MonoBehaviour
         if (currentPos.x < _minX || currentPos.x > _maxX ||
             currentPos.z < _minZ || currentPos.z > _maxZ)
         {
-            Debug.Log("Stopped");
             moving = false;
         }
         
