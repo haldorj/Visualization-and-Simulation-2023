@@ -10,28 +10,39 @@ public class Raindrop : MonoBehaviour
     
     [SerializeField] private Vector3 currentPos;
     private Vector3 _previousPos;
-
-    public GameObject ball;
-
+    
     public Triangulation surface;
 
+    public PhysicsBall ball;
+    
+    private Renderer _meshRenderer;
+    
     private void Start()
     {
         currentPos = transform.position;
         _previousPos = transform.position;
+        
+        _meshRenderer = GetComponent<Renderer>();
     }
 
     void FixedUpdate()
     {
         FreeFall();
+        
     }
 
-    void IndianaJones()
+    private void Swap()
     {
+        // Turn off rendering
+        if (_meshRenderer)
+            _meshRenderer.enabled = false;
+        
         var height = surface.GetSurfaceHeight(new Vector2(currentPos.x, currentPos.z));
         var pos = new Vector3(transform.position.x, height, transform.position.z);
+        ball.surface = surface;
 
         Instantiate(ball, pos, Quaternion.identity);
+        
         
         Destroy(this);
     }
@@ -40,7 +51,7 @@ public class Raindrop : MonoBehaviour
     {
         if (currentPos.y <= surface.GetSurfaceHeight(new Vector2(currentPos.x, currentPos.z)))
         {
-            IndianaJones();
+            Swap();
         }
         
         // Update velocity

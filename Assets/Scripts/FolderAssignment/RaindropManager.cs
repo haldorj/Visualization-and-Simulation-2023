@@ -7,12 +7,15 @@ using Random = UnityEngine.Random;
 
 public class RaindropManager : MonoBehaviour
 {
-    [SerializeField] private GameObject RainDropPrefab;
+    //[SerializeField] private GameObject RainDropPrefab;
     [SerializeField] private Vector2 SpawnSize = new (240,180);
+    [SerializeField] private Raindrop RainDrop;
 
+    public Triangulation surface;
+    
     private void Start()
     {
-        InvokeRepeating(nameof(SpawnRainDrop), 0.0f,0.2f);
+        InvokeRepeating(nameof(SpawnRainDrop), 0.0f,0.8f);
     }
 
     private void OnDrawGizmosSelected()
@@ -36,7 +39,8 @@ public class RaindropManager : MonoBehaviour
     
     void SpawnRainDrop()
     {
-        GameObject RainDropGameObject = Instantiate(RainDropPrefab, GetRandomRainDropPosition(), Quaternion.identity);
+        RainDrop.surface = surface;
+        GameObject RainDropGameObject = Instantiate(RainDrop.GameObject(), GetRandomRainDropPosition(), Quaternion.identity);
         RainDropGameObject.transform.parent = this.transform;
         
         Destroy(RainDropGameObject, 5);

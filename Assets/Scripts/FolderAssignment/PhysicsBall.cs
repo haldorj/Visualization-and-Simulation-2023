@@ -30,7 +30,13 @@ public class PhysicsBall : MonoBehaviour
     public float xStart = 0.06f;
     public float zStart = 0.03f;
 
+    [SerializeField] private bool moving = true;
     [SerializeField] private float elapsedTime;
+    
+    private float _minX = float.MaxValue;
+    private float _minZ = float.MaxValue;
+    private float _maxX = float.MinValue;
+    private float _maxZ = float.MinValue;
 
     private void Awake()
     {
@@ -45,15 +51,15 @@ public class PhysicsBall : MonoBehaviour
         // Set initial height
         var yStart = surface.GetSurfaceHeight(new Vector2(xStart, zStart));
         currentPos = new Vector3(xStart, yStart + radius, zStart);
-        
         _previousPos = currentPos;
-
         transform.position = currentPos;
+
+        FindExtremeValues();
     }
 
     void FixedUpdate()
     {
-        if (surface)
+        if (surface && moving)
         {
             Move();
         }
@@ -61,6 +67,14 @@ public class PhysicsBall : MonoBehaviour
     
     void Move()
     {
+        // AREA CHECK
+        if (currentPos.x < _minX || currentPos.x > _maxX ||
+            currentPos.z < _minZ || currentPos.z > _maxZ)
+        {
+            Debug.Log("Stopped");
+            moving = false;
+        }
+        
         // Iterate through each triangle 
         for (int i = 0; i < surface.triangles.Length; i += 3)
         {
@@ -132,12 +146,6 @@ public class PhysicsBall : MonoBehaviour
                 _previousNormal = currentNormal;
             }
         }
-        //Basic area check to verify that the ball is on the plane
-        if (currentPos.x < 0.0 || currentPos.x > 230 ||
-            currentPos.z < 0.0 || currentPos.z > 170 )
-        {
-            FreeFall();
-        }
     }
 
     void Correction(Vector3 normal)
@@ -168,6 +176,19 @@ public class PhysicsBall : MonoBehaviour
             _previousPos = currentPos;
 
             transform.position = currentPos;
+        }
+    }
+    
+    void FindExtremeValues()
+    {
+        if (surface.vertices == null || surface.vertices.Length == 0) return;
+
+        foreach (var vertex in surface.vertices)
+        {
+            _minX = Mathf.Min(_minX, vertex.x);
+            _minZ = Mathf.Min(_minZ, vertex.z);
+            _maxX = Mathf.Max(_maxX, vertex.x);
+            _maxZ = Mathf.Max(_maxZ, vertex.z);
         }
     }
 }
