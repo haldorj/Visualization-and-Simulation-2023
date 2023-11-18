@@ -12,10 +12,12 @@ public class Triangulation : MonoBehaviour
     public string path = "mergedCompressedHIGH.txt";
 
     [SerializeField]private float minX = float.MaxValue;
+    [SerializeField]private float minY = float.MaxValue;
     [SerializeField]private float minZ = float.MaxValue;
     [SerializeField]private float maxX = float.MinValue;
+    [SerializeField]private float maxY = float.MinValue;
     [SerializeField]private float maxZ = float.MinValue;
-
+    
     public int quadSize = 10;
     
     private Vector3[] _vertexData;
@@ -23,6 +25,9 @@ public class Triangulation : MonoBehaviour
     public Vector3[] corners;
     public Vector3[] vertices;
     public int[] triangles;
+    
+    [FormerlySerializedAs("_colors")] [SerializeField]private Color[] colors;
+    public Gradient gradient;
 
     public struct Quad
     {
@@ -58,11 +63,21 @@ public class Triangulation : MonoBehaviour
     void UpdateMesh()
     {
         _mesh.Clear();
-        
         _mesh.vertices = vertices;
         _mesh.triangles = triangles;
+
+        colors = new Color[vertices.Length];
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            float height = Mathf.InverseLerp(minY, maxY, vertices[i].y);
+            colors[i] = gradient.Evaluate(height);
+        }
+        
+        _mesh.colors = colors;
         _mesh.RecalculateTangents();
         _mesh.RecalculateNormals();
+        
+
     }
     
     void ConstructMeshData()
@@ -79,9 +94,9 @@ public class Triangulation : MonoBehaviour
         int vert = 0;
         List<int> triangleList = new List<int>();
 
-        for (int z = 0; z < maxZ - quadSize * 2; z+= quadSize)
+        for (int z = 0; z < (int)maxZ - quadSize * 2; z+= quadSize)
         {
-            for (int x = 0; x < (int)maxX - quadSize*2; x+= quadSize)
+            for (int x = 0; x < (int)maxX - quadSize * 2; x+= quadSize)
             {
                 
                     //  2 ---- 3
@@ -144,8 +159,10 @@ public class Triangulation : MonoBehaviour
         foreach (var vertex in _vertexData)
         {
             minX = Mathf.Min(minX, vertex.x);
+            minY = Mathf.Min(minY, vertex.y);
             minZ = Mathf.Min(minZ, vertex.z);
             maxX = Mathf.Max(maxX, vertex.x);
+            maxY = Mathf.Max(maxY, vertex.y);
             maxZ = Mathf.Max(maxZ, vertex.z);
         }
 
@@ -271,19 +288,19 @@ public class Triangulation : MonoBehaviour
         return baryc;
     }
     
-    private void OnDrawGizmos()
-    {
-        if (corners == null || corners.Length <= 0) return;
-        foreach (var vertex in corners)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawCube(vertex, Vector3.one * .2f);
-        }
-    
-        foreach (var quad in _quads)
-        {
-            Gizmos.color = Color.blue;
-            Gizmos.DrawCube(quad.Center, Vector3.one * .5f);
-        }
-    }
+    // private void OnDrawGizmos()
+    // {
+    //     if (corners == null || corners.Length <= 0) return;
+    //     foreach (var vertex in corners)
+    //     {
+    //         Gizmos.color = Color.green;
+    //         Gizmos.DrawCube(vertex, Vector3.one * .2f);
+    //     }
+    //
+    //     foreach (var quad in _quads)
+    //     {
+    //         Gizmos.color = Color.blue;
+    //         Gizmos.DrawCube(quad.Center, Vector3.one * .5f);
+    //     }
+    // }
 }

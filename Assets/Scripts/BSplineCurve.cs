@@ -201,7 +201,7 @@ public class BSplineCurve : MonoBehaviour
             //     Gizmos.color = Color.magenta;
             // else
             */
-            Gizmos.color = Color.white;
+            Gizmos.color = Color.blue;
             
             Gizmos.DrawLine(prev, current);
             prev = current;

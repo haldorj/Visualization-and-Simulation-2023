@@ -93,6 +93,7 @@ public class PhysicsBall : MonoBehaviour
         
         GameObject SplineGameObject = Instantiate(spline.GameObject(), Vector3.zero, Quaternion.identity);
         //spline.transform.parent = transform;
+        
         SplineGameObject.transform.parent = this.transform;
         splineExists = true;
     }
