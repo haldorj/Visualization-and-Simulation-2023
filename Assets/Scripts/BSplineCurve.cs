@@ -14,28 +14,38 @@ public class BSplineCurve : MonoBehaviour
 
     public GameObject obj;
 
-    private bool _forward;
+    [SerializeField]private bool forward;
     private float _tValue;
 
     private const float H = 0.05f;
     private float _tmin = 0.0f;
     private float _tmax;
-    
+
+    public float yOffset;
+
+    public bool isNpc;
+
     private void Awake()
-    {
-
-    }
-
-    private void Start()
     {
         if (controlPoints != null)
             InitializeKnotVector();
         
         // initial position
         if (obj)
+        {
             obj.transform.position = controlPoints[0];
+            obj.transform.position += new Vector3(0f, yOffset, 0f);
+        }
+        
+        forward = true;
     }
 
+    private void FixedUpdate()
+    {
+        if (obj)
+            MoveNpc(Time.fixedDeltaTime);
+    }
+    
     public void InitializeKnotVector()
     {
         if (Degree == 2)
@@ -81,12 +91,6 @@ public class BSplineCurve : MonoBehaviour
             _tmax = 3.0f;
         }
     }
-    
-    private void FixedUpdate()
-    {
-        if (obj)
-            MoveNpc(Time.fixedDeltaTime);
-    }
 
     private Vector3 EvaluateBSplineSimple(float x)
     {
@@ -129,7 +133,7 @@ public class BSplineCurve : MonoBehaviour
         Vector3 next;           // Next pos
         Vector3 trajectory;     // Trajectory we will move in (Current - Next)
         
-        if (_forward) // move forwards
+        if (forward) // move forwards
         {
             if (_tValue < _tmax)
             {
@@ -139,18 +143,29 @@ public class BSplineCurve : MonoBehaviour
 
                 trajectory = next - current;
 
-                obj.transform.position += trajectory;
-                
+                if (!isNpc)
+                {
+                    // "Floating" effect
+                    obj.transform.position += trajectory + new Vector3(0, Mathf.Sin(_tValue * 5) * 0.07f, 0);
+                }
+                else
+                {
+                    obj.transform.position += trajectory;
+                }
+                    
             }
 
             if (!(_tValue >= _tmax)) return;
             // Correct position
+            if (!isNpc) return;
             _tValue = _tmax;
             obj.transform.position = EvaluateBSplineSimple(_tmax);
-            _forward = !_forward;
+            forward = !forward;
         }
         else // move backwards
         {
+            if (!isNpc) return;
+            
             if (_tValue > _tmin)
             {
                 current = EvaluateBSplineSimple(_tValue);
@@ -163,10 +178,11 @@ public class BSplineCurve : MonoBehaviour
             }
 
             if (!(_tValue <= _tmin)) return;
+            
             // Correct position
             _tValue = _tmin;
             obj.transform.position = EvaluateBSplineSimple(_tmin);
-            _forward = !_forward;
+            forward = !forward;
         }
     }
     
@@ -190,17 +206,6 @@ public class BSplineCurve : MonoBehaviour
         for (var t = _tmin + H; t <= _tmax; t += H)
         {
             var current = EvaluateBSplineSimple(t);
-            /*
-            // if (t <= 1)
-            //     Gizmos.color = Color.red;
-            // else if (t <= 2)
-            //     Gizmos.color = Color.yellow;
-            // else if (t <= 3)
-            //     Gizmos.color = Color.cyan;
-            // else if (t <= 4)
-            //     Gizmos.color = Color.magenta;
-            // else
-            */
             Gizmos.color = Color.blue;
             
             Gizmos.DrawLine(prev, current);

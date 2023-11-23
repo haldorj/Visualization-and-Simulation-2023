@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Serialization;
-
+using Random = UnityEngine.Random;
 
 public class PhysicsBall : MonoBehaviour
 {
@@ -43,6 +43,8 @@ public class PhysicsBall : MonoBehaviour
 
     [SerializeField] private BSplineCurve spline;
 
+    public Material ballMaterial;
+
     private void Awake()
     {
         radius = transform.localScale.z / 2;
@@ -66,7 +68,7 @@ public class PhysicsBall : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (surface && moving)
+        if (surface) //&& moving)
         {
             Move();
             
@@ -90,8 +92,22 @@ public class PhysicsBall : MonoBehaviour
     {
         spline.controlPoints = controlPoints;
         spline.InitializeKnotVector();
+
+        float sphereRadius = 2.5f;
+        GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        sphere.transform.localScale = Vector3.one * (sphereRadius * 2);
+        sphere.GetComponent<Renderer>().material = ballMaterial;
+
+        spline.obj = sphere;
+        spline.yOffset = sphereRadius;
+        
+        if (Random.Range(0, 100) > 20)
+        {
+            spline.obj.SetActive(false);
+        }
         
         GameObject SplineGameObject = Instantiate(spline.GameObject(), Vector3.zero, Quaternion.identity);
+        
         //spline.transform.parent = transform;
         
         SplineGameObject.transform.parent = this.transform;
@@ -106,7 +122,7 @@ public class PhysicsBall : MonoBehaviour
         {
             moving = false;
         }
-        
+
         // Iterate through each triangle 
         for (int i = 0; i < surface.triangles.Length; i += 3)
         {
@@ -176,6 +192,111 @@ public class PhysicsBall : MonoBehaviour
                 // Update triangle index and normal
                 _previousTriangle = currentTriangle;
                 _previousNormal = currentNormal;
+            }
+        }
+    }
+    
+    void Move2()
+    {
+        int cellSize = surface.cellSize;
+
+        // Find the cell indices for the current position
+        int cellX = Mathf.FloorToInt((currentPos.x - _minX) / cellSize);
+        int cellZ = Mathf.FloorToInt((currentPos.z - _minZ) / cellSize);
+
+        // Iterate through nearby cells (adjust the range based on your needs)
+        for (int offsetX = -1; offsetX <= 1; offsetX++)
+        {
+            for (int offsetZ = -1; offsetZ <= 1; offsetZ++)
+            {
+                int checkCellX = cellX + offsetX;
+                int checkCellZ = cellZ + offsetZ;
+
+                // Check if the cell indices are valid
+                if (checkCellX >= 0 && checkCellX < surface.numCellsX &&
+                    checkCellZ >= 0 && checkCellZ < surface.numCellsZ)
+                {
+                    // Iterate through triangles in the current cell
+                    int cellIndex = checkCellX + checkCellZ * surface.numCellsX;
+
+                    Debug.Log(surface.Grid[cellIndex].Count);
+                    
+                    for (int i = 0; i < surface.Grid[cellIndex].Count; i += 3)
+                    {
+                        // Get the triangle indices for the current cell
+                        int triangleIndex0 = surface.Grid[cellIndex][i];
+                        int triangleIndex1 = surface.Grid[cellIndex][i + 1];
+                        int triangleIndex2 = surface.Grid[cellIndex][i + 2];
+
+                        // Find the vertices of the triangle
+                        Vector3 p0 = surface.vertices[surface.triangles[triangleIndex0]];
+                        Vector3 p1 = surface.vertices[surface.triangles[triangleIndex1]];
+                        Vector3 p2 = surface.vertices[surface.triangles[triangleIndex2]];
+                        
+                        // Find the balls position in the xz-plane
+                        Vector2 pos = new Vector2(currentPos.x, currentPos.z);
+            
+                        // Find which triangle the ball is currently on with barycentric coordinates
+                        Vector3 baryCoords = TriangleSurface.BarycentricCoordinates(
+                            new Vector2(p0.x, p0.z), 
+                            new Vector2(p1.x, p1.z),  
+                            new Vector2(p2.x, p2.z),  
+                            pos
+                            );
+                        
+                        if (baryCoords is { x: >= 0.0f, y: >= 0.0f, z: >= 0.0f })
+                        {
+                            elapsedTime += Time.fixedDeltaTime;
+                            // Current triangle index
+                            currentTriangle = i / 3;
+                            // Calculate normal vector
+
+                            currentNormal = Vector3.Cross(p1 - p0, p2 - p0).normalized;
+                            // Calculate acceleration vector
+                            accelerationVector = new Vector3(currentNormal.x * currentNormal.y, 
+                                currentNormal.y * currentNormal.y - 1, 
+                                currentNormal.z * currentNormal.y) * -Physics.gravity.y;
+                            acceleration = accelerationVector.magnitude;
+                            // Update velocity
+                            currentVelocity = _previousVelocity + accelerationVector * Time.fixedDeltaTime;
+                            _previousVelocity = currentVelocity;
+
+                            //Debug.Log("Velocity: " + currentVelocity.magnitude);
+                            
+                            // Update position
+                            currentPos = _previousPos + currentVelocity * Time.fixedDeltaTime;
+                            _previousPos = currentPos;
+                            transform.position = currentPos;
+
+                            //float distanceTraveled = (new Vector3(_previousPos.x, _previousPos.y-radius, _previousPos.z) - start).magnitude;
+
+                            if (currentTriangle != _previousTriangle)
+                            {
+                                // COLLISION: The ball is on a new triangle
+                                
+                                // Calculate the normal (n) of the collision plane
+                                var n = (_previousNormal + currentNormal).normalized;
+
+                                Correction(n);
+                                
+                                // Update the velocity vector r = v − 2(v · n)n
+                                var velocityAfter = _previousVelocity - 2 * Vector3.Dot(_previousVelocity, n) * n;
+                                
+                                currentVelocity = velocityAfter + accelerationVector * Time.fixedDeltaTime;
+                                _previousVelocity = currentVelocity;
+                                
+                                // Update the position in the direction of the new velocity vector
+                                currentPos = _previousPos + currentVelocity * Time.fixedDeltaTime;
+                                transform.position = currentPos;
+                                _previousPos = currentPos;
+                            }
+                            
+                            // Update triangle index and normal
+                            _previousTriangle = currentTriangle;
+                            _previousNormal = currentNormal;
+                        }
+                    }
+                }
             }
         }
     }
