@@ -44,19 +44,19 @@ public class BSplineCurve : MonoBehaviour
             
             List<float> k = new List<float>(); // knots
 
-            for (int i = 0; i <= Degree - 1; i++)
+            for (int i = 0; i <= Degree; i++)
             {
                 k.Add(index);
             }
 
             // c - d - 1
-            for (int i = 0; i < controlPoints.Count - 1; i++)
+            for (int i = 0; i <= controlPoints.Count - Degree - 1; i++)
             {
                 index++;
                 k.Add(index);
             }
             
-            for (int i = 0; i < Degree; i++)
+            for (int i = 0; i <= Degree - 1; i++)
             {
                 k.Add(index);
             }

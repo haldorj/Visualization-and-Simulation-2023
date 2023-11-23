@@ -30,7 +30,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
@@ -49,7 +49,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentVelocity: {x: 0, y: 0, z: 0}
   currentPos: {x: 0, y: 0, z: 0}
-  surface: {fileID: 2215398351686632934, guid: 4b9f202b1e15e1f49940843a4302e73a, type: 3}
+  surface: {fileID: 0}
   ball: {fileID: 70917286786027554, guid: de80c27b857e4914591fb13b838ae827, type: 3}
 --- !u!33 &646653540206038898
 MeshFilter:

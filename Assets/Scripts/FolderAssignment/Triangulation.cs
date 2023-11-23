@@ -26,7 +26,7 @@ public class Triangulation : MonoBehaviour
     public Vector3[] vertices;
     public int[] triangles;
     
-    [FormerlySerializedAs("_colors")] [SerializeField]private Color[] colors;
+    [SerializeField]private Color[] colors;
     public Gradient gradient;
 
     public struct Quad
