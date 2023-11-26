@@ -103,13 +103,12 @@ public class PhysicsBall : MonoBehaviour
         
         if (Random.Range(0, 100) > 20)
         {
-            spline.obj.SetActive(false);
+            Destroy(spline.obj);
         }
         
         GameObject SplineGameObject = Instantiate(spline.GameObject(), Vector3.zero, Quaternion.identity);
-        
-        //spline.transform.parent = transform;
-        
+
+        sphere.transform.parent = SplineGameObject.transform;
         SplineGameObject.transform.parent = this.transform;
         splineExists = true;
     }

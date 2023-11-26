@@ -8,4 +8,13 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Compulsory2.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/Scenes/Folder Exam/MainMenu.unity
+    guid: daf5e7762a634174f93def6ce96f014a
+  - enabled: 1
+    path: Assets/Scenes/Folder Exam/TerrainScene.unity
+    guid: db483e9fb2932d84cb4e2eada0456252
+  - enabled: 1
+    path: Assets/Scenes/Folder Exam/PointCloudScene.unity
+    guid: 8cb425bcfe2afee46bad45eff1f84727
   m_configObjects: {}
