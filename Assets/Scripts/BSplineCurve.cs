@@ -72,15 +72,19 @@ public class BSplineCurve : MonoBehaviour
             {
                 k.Add(index);
             }
-
+            index++;
             // c - d - 1
-            for (int i = 0; i <= controlPoints.Count - Degree - 1; i++)
+            if (controlPoints.Count - Degree - 1 > 0)
             {
-                index++;
-                k.Add(index);
+                for (int i = 0; i < controlPoints.Count - Degree - 1; i++)
+                {
+                
+                    k.Add(index);
+                    index++;
+                }
             }
-
-            for (int i = 0; i <= Degree - 1; i++)
+            
+            for (int i = 0; i <= Degree; i++)
             {
                 k.Add(index);
             }

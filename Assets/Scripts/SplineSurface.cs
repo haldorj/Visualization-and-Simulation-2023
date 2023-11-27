@@ -9,11 +9,13 @@ using Random = UnityEngine.Random;
 
 public class SplineSurface : MonoBehaviour
 {
-    public int numControlPointsX = 3;   //ni
-    public int numControlPointsY = 4;   //nj
+    public int numControlPointsX;
+    public int numControlPointsY;
+    private int _numRectanglesX = 3;   //ni
+    private int _numRectanglesY = 4;   //nj
     private Vector3[,] _controlPoints;
-    public int degreeX = 3;             //ti
-    public int degreeY = 3;             //tj
+    public int degreeX = 3;          //ti
+    public int degreeY = 3;          //tj
     public int[] knotsX;
     public int[] knotsY;
     public int resolutionX = 30;
@@ -27,13 +29,19 @@ public class SplineSurface : MonoBehaviour
 
     private void Start()
     {
-        _controlPoints = new Vector3[numControlPointsX + 1, numControlPointsY + 1];
-        knotsX = new int[numControlPointsX + degreeX + 1];
-        knotsY = new int[numControlPointsY + degreeY + 1];
+        _numRectanglesX = numControlPointsX - 1;
+        _numRectanglesY = numControlPointsY - 1;
+        
+        _controlPoints = new Vector3[_numRectanglesX + 1, _numRectanglesY + 1];
+        knotsX = new int[_numRectanglesX + degreeX + 1];
+        knotsY = new int[_numRectanglesY + degreeY + 1];
         _output = new Vector3[resolutionX, resolutionY];
         
-        SplineKnots(knotsX,numControlPointsX,degreeX);
-        SplineKnots(knotsY,numControlPointsY,degreeY);
+        // SplineKnots(knotsX,numRectanglesX,degreeX);
+        // SplineKnots(knotsY,numRectanglesY,degreeY);
+        
+        knotsX = InitializeKnotVector(knotsX,_numRectanglesX,degreeX);
+        knotsY = InitializeKnotVector(knotsY,_numRectanglesY,degreeY);
 
         GenerateControlPoints();
         CalculateSplineSurface();
@@ -42,9 +50,9 @@ public class SplineSurface : MonoBehaviour
 
     private void GenerateControlPoints()
     {
-        for (int i = 0; i <= numControlPointsX; i++)
+        for (int i = 0; i <= _numRectanglesX; i++)
         {
-            for (int j = 0; j <= numControlPointsY; j++)
+            for (int j = 0; j <= _numRectanglesY; j++)
             {
                 _controlPoints[i, j] = new Vector3(i, Random.Range(-1f, 1f), j);
             }
@@ -53,10 +61,9 @@ public class SplineSurface : MonoBehaviour
 
     void CalculateSplineSurface()
     {
-        var incrementI = (numControlPointsX - degreeX + 2) / ((double)resolutionX - 1);
-        var incrementJ = (numControlPointsY - degreeY + 2) / ((double)resolutionY - 1);
+        var incrementI = (_numRectanglesX - degreeX + 2) / ((double)resolutionX - 1);
+        var incrementJ = (_numRectanglesY - degreeY + 2) / ((double)resolutionY - 1);
 
-        // Your spline surface calculation logic goes here
         double intervalI = 0;
         for (int i = 0; i < resolutionX - 1; i++)
         {
@@ -65,9 +72,9 @@ public class SplineSurface : MonoBehaviour
             {
                 _output[i, j] = Vector3.zero;
 
-                for (int ki = 0; ki <= numControlPointsX; ki++)
+                for (int ki = 0; ki <= _numRectanglesX; ki++)
                 {
-                    for (int kj = 0; kj <= numControlPointsY; kj++)
+                    for (int kj = 0; kj <= _numRectanglesY; kj++)
                     {
                         var bi = SplineBlend(ki, degreeX, knotsX, intervalI);
                         var bj = SplineBlend(kj, degreeY, knotsY, intervalJ);
@@ -113,23 +120,19 @@ public class SplineSurface : MonoBehaviour
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
 
-        // You can add more settings to the mesh, such as normals and UV coordinates, if needed.
 
-        // Create or get a MeshRenderer component attached to the GameObject
         _meshRenderer = GetComponent<MeshRenderer>();
         if (_meshRenderer == null)
         {
             _meshRenderer = gameObject.AddComponent<MeshRenderer>();
         }
-
-        // Create or get a MeshFilter component attached to the GameObject
+        
         _meshFilter = GetComponent<MeshFilter>();
         if (_meshFilter == null)
         {
             _meshFilter = gameObject.AddComponent<MeshFilter>();
         }
-
-        // Assign the mesh to the MeshFilter
+        
         _meshFilter.mesh = mesh;
 
         colors = new Color[mesh.vertices.Length];
@@ -138,7 +141,6 @@ public class SplineSurface : MonoBehaviour
             float height = Mathf.InverseLerp(-1, 1, vertices[i].y);
             colors[i] = gradient.Evaluate(height);
         }
-        
         mesh.colors = colors;
     }
     
@@ -156,7 +158,40 @@ public class SplineSurface : MonoBehaviour
                 u[j] = n - t + 2;	
         }
     }
-    
+
+    int[] InitializeKnotVector(int[] knots, int numRects, int degree)
+    {
+        int index = 0;
+        numRects++; // increment once to get number of controlpoints
+        degree--;
+
+        List<int> k = new List<int>(); // knots
+
+        for (int i = 0; i <= degree; i++)
+        {
+            k.Add(index);
+        }
+
+        index++;
+        // c - d - 1
+        if (numRects - degree - 1 > 0)
+        {
+            for (int i = 0; i < numRects - degree - 1; i++)
+            {
+
+                k.Add(index);
+                index++;
+            }
+        }
+
+        for (int i = 0; i <= degree; i++)
+        {
+            k.Add(index);
+        }
+
+        return k.ToArray();
+    }
+
     double SplineBlend(int k,int t, int[] u,double v)
     {
         double value;
@@ -182,24 +217,25 @@ public class SplineSurface : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        if (_controlPoints == null) return;
         foreach (var point in _controlPoints)
         {
             Gizmos.color = Color.magenta;
             Gizmos.DrawSphere(point, .04f);
         }
         Gizmos.color = Color.green;
-        for (int i = 0; i <= numControlPointsX; i++)
+        for (int i = 0; i <= _numRectanglesX; i++)
         {
-            for (int j = 0; j < numControlPointsY; j++)
+            for (int j = 0; j < _numRectanglesY; j++)
             {
                 // Up
                 Gizmos.DrawLine(_controlPoints[i, j], _controlPoints[i, j + 1]);
             }
         }
 
-        for (int i = 0; i < numControlPointsX; i++)
+        for (int i = 0; i < _numRectanglesX; i++)
         {
-            for (int j = 0; j <= numControlPointsY; j++)
+            for (int j = 0; j <= _numRectanglesY; j++)
             {
                 // Right
                 Gizmos.DrawLine(_controlPoints[i, j], _controlPoints[i + 1, j]);

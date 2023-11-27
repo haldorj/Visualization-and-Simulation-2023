@@ -14,6 +14,11 @@ public class MainMenu : MonoBehaviour
     {
         SceneManager.LoadScene("TerrainScene");
     }
+    
+    public void SceneThree()
+    {
+        SceneManager.LoadScene("SplineSurfaceScene");
+    }
 
     public void ReturnMainMenu()
     {
