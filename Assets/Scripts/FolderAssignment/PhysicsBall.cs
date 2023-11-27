@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -44,8 +45,6 @@ public class PhysicsBall : MonoBehaviour
 
     [SerializeField] private BSplineCurve spline;
 
-    public Material ballMaterial;
-
     private void Awake()
     {
         radius = transform.localScale.z / 2;
@@ -65,8 +64,8 @@ public class PhysicsBall : MonoBehaviour
         FindExtremeValues();
 
         splineExists = false;
-
-        _timer = 2f;
+        
+        _timer = 3f;
     }
 
     void FixedUpdate()
@@ -97,24 +96,23 @@ public class PhysicsBall : MonoBehaviour
     void GenerateBSpline()
     {
         spline.controlPoints = controlPoints;
-        spline.InitializeKnotVector();
-
-        float sphereRadius = 2.5f;
-        GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        sphere.transform.localScale = Vector3.one * (sphereRadius * 2);
-        sphere.GetComponent<Renderer>().material = ballMaterial;
-
-        spline.obj = sphere;
-        spline.yOffset = sphereRadius;
         
-        if (Random.Range(0, 100) > 20)
-        {
-            Destroy(spline.obj);
-        }
+        // float sphereRadius = 2.5f;
+        // GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        // sphere.transform.localScale = Vector3.one * (sphereRadius * 2);
+        // sphere.GetComponent<Renderer>().material = ballMaterial;
+
+        // spline.obj = sphere;
+        // spline.yOffset = sphereRadius;
+        
+        // if (Random.Range(0, 100) > 20)
+        // {
+        //     Destroy(spline.obj);
+        // }
         
         GameObject SplineGameObject = Instantiate(spline.GameObject(), Vector3.zero, Quaternion.identity);
 
-        sphere.transform.parent = SplineGameObject.transform;
+        //sphere.transform.parent = SplineGameObject.transform;
         SplineGameObject.transform.parent = this.transform;
         splineExists = true;
     }

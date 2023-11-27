@@ -29,7 +29,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 140.44667, y: 30.10231, z: 43.044067}
-  m_LocalScale: {x: 6.1, y: 6.1, z: 6.1}
+  m_LocalScale: {x: 6, y: 6, z: 6}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
@@ -58,8 +58,8 @@ MonoBehaviour:
   zStart: 0.03
   moving: 1
   elapsedTime: 0
-  splineExists: 0
   isRain: 0
+  splineExists: 0
   controlPoints: []
   spline: {fileID: 1848994699224732371, guid: 40dd32dabb788f247a86e25cac6a70f2, type: 3}
   ballMaterial: {fileID: 0}

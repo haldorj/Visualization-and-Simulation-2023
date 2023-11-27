@@ -1996,6 +1996,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2215398351686632934, guid: 4b9f202b1e15e1f49940843a4302e73a,
         type: 3}
+      propertyPath: maxX
+      value: -3.402823e+38
+      objectReference: {fileID: 0}
+    - target: {fileID: 2215398351686632934, guid: 4b9f202b1e15e1f49940843a4302e73a,
+        type: 3}
       propertyPath: cellSize
       value: 20
       objectReference: {fileID: 0}

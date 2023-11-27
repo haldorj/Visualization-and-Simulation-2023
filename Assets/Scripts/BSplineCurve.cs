@@ -5,6 +5,7 @@ using System.Linq;
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Serialization;
 
 public class BSplineCurve : MonoBehaviour
@@ -15,8 +16,8 @@ public class BSplineCurve : MonoBehaviour
 
     public GameObject obj;
 
-    [SerializeField]private bool forward;
-    private float _tValue;
+    [SerializeField] private bool forward;
+    [FormerlySerializedAs("_tValue")] [SerializeField]private float tValue;
 
     private const float H = 0.1f;
     private float _tmin = 0.0f;
@@ -26,37 +27,46 @@ public class BSplineCurve : MonoBehaviour
 
     public bool isNpc;
 
+    [SerializeField]private List<Vector3> positions;
+    [SerializeField]private List<float> tValues = new();
+
+    private const float SphereRadius = 3f;
+    public Material ballMaterial;
+
     private void Awake()
     {
         if (controlPoints != null)
+        {
             InitializeKnotVector();
-        
+            GeneratePositions();
+        }
+
         // initial position
+        obj = CreateObj();
+        obj.SetActive(false);
         if (obj)
         {
             obj.transform.position = controlPoints[0];
             obj.transform.position += new Vector3(0f, yOffset, 0f);
         }
-        
+
         forward = true;
     }
 
     private void FixedUpdate()
     {
-        if (obj)
+        if (obj && obj.activeSelf)
             MoveNpc(Time.fixedDeltaTime);
-        
 
-        Check();
-
+        AreaCheck();
     }
-    
+
     public void InitializeKnotVector()
     {
         if (Degree == 2)
         {
             int index = 0;
-            
+
             List<float> k = new List<float>(); // knots
 
             for (int i = 0; i <= Degree; i++)
@@ -70,7 +80,7 @@ public class BSplineCurve : MonoBehaviour
                 index++;
                 k.Add(index);
             }
-            
+
             for (int i = 0; i <= Degree - 1; i++)
             {
                 k.Add(index);
@@ -78,13 +88,6 @@ public class BSplineCurve : MonoBehaviour
 
             knots = k.ToArray();
             _tmax = k.Last();
-
-            // knots = new float[]
-            // {
-            //     0, 0, 0, 1, 2, 3, 4, 4, 4 //2nd
-            // }
-            //
-            //_tmax = 4.0f;
         }
 
         if (Degree == 3)
@@ -118,50 +121,68 @@ public class BSplineCurve : MonoBehaviour
                 a[i] = a[i] * (1 - w) + a[i + 1] * w;
             }
         }
+
         return a[0];
     }
 
     private int FindKnotInterval(float x)
     {
         int my = controlPoints.Count - 1; // index of last control point
-
-        // Separate the conditions
+        
         while (my >= 0 && my < knots.Length && x < knots[my] && my > Degree)
             my--;
 
         return my;
     }
-    
-    bool IsBetween ( Vector3 C )
+
+    public void GeneratePositions()
     {
-        for (int i = 0; i < controlPoints.Count; i++)
+        for (int i = 0; i <= controlPoints.Count - Degree; i++)
         {
-            
-            if (controlPoints[i+1] != null)
-            {
-                var A = controlPoints[i + 1];
-                var B = controlPoints[i];
-                
-                return Vector3.Dot( (B-A).normalized , (C-B).normalized ) < 0f && Vector3.Dot( (A-B).normalized , (C-A).normalized )<0f;
-            }
+            positions.Add(EvaluateBSplineSimple(i));
+            tValues.Add((float)i);
         }
-        return false;
     }
 
-    void Check()
+    void AreaCheck()
     {
         PhysicsBall[] physicsBalls = FindObjectsOfType<PhysicsBall>();
 
         foreach (var ball in physicsBalls)
         {
             if (ball.isRain) return;
-            if (IsBetween(ball.GameObject().transform.position))
+            for (int i = 0; i < positions.Count; i++)
             {
-                Debug.Log("a");
-                //ball.GameObject().SetActive(false);
+                float distance = Vector3.Distance(positions[i], ball.transform.position);
+                if (distance <= 7)
+                {
+                    obj.SetActive(true);
+                    obj.transform.position = positions[i];
+                    obj.transform.localPosition += Vector3.up * SphereRadius;
+                    tValue = tValues[i];
+                    
+                    ball.GameObject().SetActive(false);
+                    Destroy(ball);
+                }
             }
         }
     }
+
+    GameObject CreateObj()
+    {
+        
+        GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        sphere.transform.localScale = Vector3.one * (SphereRadius * 2);
+        sphere.GetComponent<Renderer>().material = ballMaterial;
+
+        obj = sphere;
+        yOffset = SphereRadius;
+
+        sphere.transform.parent = this.transform;
+        
+        return sphere;
+    }
+
 
     void MoveNpc(float dt)
     {
@@ -171,11 +192,11 @@ public class BSplineCurve : MonoBehaviour
         
         if (forward) // move forwards
         {
-            if (_tValue < _tmax)
+            if (tValue < _tmax)
             {
-                current = EvaluateBSplineSimple(_tValue);
-                _tValue += dt;
-                next = EvaluateBSplineSimple(_tValue);
+                current = EvaluateBSplineSimple(tValue);
+                tValue += dt;
+                next = EvaluateBSplineSimple(tValue);
 
                 trajectory = next - current;
 
@@ -184,7 +205,7 @@ public class BSplineCurve : MonoBehaviour
                     // "Floating" effect
                     const float speed = 5;
                     const float amplitude = 0.07f;
-                    obj.transform.position += trajectory + Vector3.up * (Mathf.Sin(_tValue * speed) * amplitude);
+                    obj.transform.position += trajectory + Vector3.up * (Mathf.Sin(tValue * speed) * amplitude);
                 }
                 else
                 {
@@ -193,10 +214,10 @@ public class BSplineCurve : MonoBehaviour
                     
             }
 
-            if (!(_tValue >= _tmax)) return;
+            if (!(tValue >= _tmax)) return;
             // Correct position
             if (!isNpc) return;
-            _tValue = _tmax;
+            tValue = _tmax;
             obj.transform.position = EvaluateBSplineSimple(_tmax);
             forward = !forward;
         }
@@ -204,21 +225,21 @@ public class BSplineCurve : MonoBehaviour
         {
             if (!isNpc) return;
             
-            if (_tValue > _tmin)
+            if (tValue > _tmin)
             {
-                current = EvaluateBSplineSimple(_tValue);
-                _tValue -= dt;
-                next = EvaluateBSplineSimple(_tValue);
+                current = EvaluateBSplineSimple(tValue);
+                tValue -= dt;
+                next = EvaluateBSplineSimple(tValue);
 
                 trajectory = next - current;
                 
                 obj.transform.position += trajectory;
             }
 
-            if (!(_tValue <= _tmin)) return;
+            if (!(tValue <= _tmin)) return;
             
             // Correct position
-            _tValue = _tmin;
+            tValue = _tmin;
             obj.transform.position = EvaluateBSplineSimple(_tmin);
             forward = !forward;
         }
@@ -248,6 +269,12 @@ public class BSplineCurve : MonoBehaviour
             
             Gizmos.DrawLine(prev, current);
             prev = current;
+        }
+        
+        foreach (var point in positions)
+        {
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawSphere(point, 1f);
         }
     }
 }
