@@ -1,8 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class CameraScript : MonoBehaviour
 {
@@ -38,12 +35,12 @@ public class CameraScript : MonoBehaviour
 
         if (Physics.Raycast(_cam.ScreenPointToRay(Input.mousePosition), out hit, 1000)) 
         {
-            Triangulation hitTriangulation = hit.collider.gameObject.GetComponent<Triangulation>();
+            Triangulation hitSurface = hit.collider.gameObject.GetComponent<Triangulation>();
 
             _hitPoint = hit.point;
 
             print(_hitPoint.ToString());
-            ball.surface = hitTriangulation;
+            ball.surface = hitSurface;
             GameObject ballGameObject = Instantiate(ball.GameObject(), _hitPoint, Quaternion.identity);
 
             ballGameObject.transform.parent = parentObj.transform;

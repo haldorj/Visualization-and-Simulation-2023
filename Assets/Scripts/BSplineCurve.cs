@@ -1,11 +1,7 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.Serialization;
 
 public class BSplineCurve : MonoBehaviour
@@ -17,7 +13,7 @@ public class BSplineCurve : MonoBehaviour
     public GameObject obj;
 
     [SerializeField] private bool forward;
-    [FormerlySerializedAs("_tValue")] [SerializeField]private float tValue;
+    [SerializeField]private float tValue;
 
     private const float H = 0.1f;
     private float _tmin = 0.0f;
@@ -33,8 +29,11 @@ public class BSplineCurve : MonoBehaviour
     private const float SphereRadius = 3f;
     public Material ballMaterial;
 
+    private LineRenderer _lineRenderer;
+    
     private void Awake()
     {
+        _lineRenderer = GetComponent<LineRenderer>();
         if (controlPoints != null)
         {
             InitializeKnotVector();
@@ -141,6 +140,12 @@ public class BSplineCurve : MonoBehaviour
         {
             positions.Add(EvaluateBSplineSimple(i));
             tValues.Add((float)i);
+        }
+
+        _lineRenderer.positionCount = positions.Count;
+        for (int i = 0; i < positions.Count; i++)
+        {
+            _lineRenderer.SetPosition(i, positions[i]);
         }
     }
 
@@ -261,15 +266,15 @@ public class BSplineCurve : MonoBehaviour
         //     Gizmos.DrawLine(controlPoints[i], controlPoints[i + 1]);
         // }
         
-        var prev = EvaluateBSplineSimple(_tmin);
-        for (var t = _tmin + H; t <= _tmax; t += H)
-        {
-            var current = EvaluateBSplineSimple(t);
-            Gizmos.color = Color.blue;
-            
-            Gizmos.DrawLine(prev, current);
-            prev = current;
-        }
+        // var prev = EvaluateBSplineSimple(_tmin);
+        // for (var t = _tmin + H; t <= _tmax; t += H)
+        // {
+        //     var current = EvaluateBSplineSimple(t);
+        //     Gizmos.color = Color.blue;
+        //     
+        //     Gizmos.DrawLine(prev, current);
+        //     prev = current;
+        // }
         
         foreach (var point in positions)
         {

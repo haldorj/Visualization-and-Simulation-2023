@@ -1,11 +1,6 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Serialization;
-using Random = UnityEngine.Random;
 
 public class PhysicsBall : MonoBehaviour
 {
@@ -38,7 +33,7 @@ public class PhysicsBall : MonoBehaviour
     private float _maxX = float.MinValue;
     private float _maxZ = float.MinValue;
 
-    private float _timer;
+    private float _timer = 1f;
     public bool isRain;
     [SerializeField] private bool splineExists;
     [SerializeField] private List<Vector3> controlPoints;
@@ -64,11 +59,9 @@ public class PhysicsBall : MonoBehaviour
         FindExtremeValues();
 
         splineExists = false;
-        
-        _timer = 3f;
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
         if (surface && moving)
         {
@@ -83,9 +76,9 @@ public class PhysicsBall : MonoBehaviour
             }
         }
         
-        if (!moving && !splineExists &&isRain)
+        if (!moving && !splineExists && isRain)
         {
-            controlPoints.Add(currentPos);
+            controlPoints.Add(currentPos + Vector3.up * radius);
             GenerateBSpline();
         }
         
@@ -93,31 +86,16 @@ public class PhysicsBall : MonoBehaviour
             Destroy(this);
     }
 
-    void GenerateBSpline()
+    private void GenerateBSpline()
     {
         spline.controlPoints = controlPoints;
-        
-        // float sphereRadius = 2.5f;
-        // GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        // sphere.transform.localScale = Vector3.one * (sphereRadius * 2);
-        // sphere.GetComponent<Renderer>().material = ballMaterial;
-
-        // spline.obj = sphere;
-        // spline.yOffset = sphereRadius;
-        
-        // if (Random.Range(0, 100) > 20)
-        // {
-        //     Destroy(spline.obj);
-        // }
-        
         GameObject SplineGameObject = Instantiate(spline.GameObject(), Vector3.zero, Quaternion.identity);
-
-        //sphere.transform.parent = SplineGameObject.transform;
         SplineGameObject.transform.parent = this.transform;
+        
         splineExists = true;
     }
     
-    void Move()
+    private void Move()
     {
         // AREA CHECK
         if (currentPos.x < _minX || currentPos.x > _maxX ||
@@ -303,7 +281,7 @@ public class PhysicsBall : MonoBehaviour
     }
     
 
-    void Correction(Vector3 normal)
+    private void Correction(Vector3 normal)
     {
         // Find the point on the ground directly under the center of the ball
         var point = new Vector3(currentPos.x, 
@@ -319,7 +297,7 @@ public class PhysicsBall : MonoBehaviour
         }
     }
     
-    void FreeFall()
+    private void FreeFall()
     {
         if (currentPos.y > -20)
         {
@@ -334,7 +312,7 @@ public class PhysicsBall : MonoBehaviour
         }
     }
     
-    void FindExtremeValues()
+    private void FindExtremeValues()
     {
         if (surface.vertices == null || surface.vertices.Length == 0) return;
 
