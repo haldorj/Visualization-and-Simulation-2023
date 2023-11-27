@@ -29,6 +29,9 @@ public class Triangulation : MonoBehaviour
     [SerializeField]private Color[] colors;
     public Gradient gradient;
 
+    // Only used with camera class
+    public MeshCollider meshCollider;
+    
     public struct Quad
     {
         public float XMax;
@@ -51,6 +54,7 @@ public class Triangulation : MonoBehaviour
     {
         _mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = _mesh;
+        meshCollider = GetComponent<MeshCollider>();
         
         ReadVertexData(path);
         FindExtremeValues();
@@ -78,8 +82,7 @@ public class Triangulation : MonoBehaviour
         _mesh.colors = colors;
         _mesh.RecalculateTangents();
         _mesh.RecalculateNormals();
-        
-
+        meshCollider.sharedMesh = _mesh;
     }
     
     void ConstructMeshData()

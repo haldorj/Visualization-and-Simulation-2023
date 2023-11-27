@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
 public class RaindropManager : MonoBehaviour
@@ -13,9 +14,24 @@ public class RaindropManager : MonoBehaviour
 
     public Triangulation surface;
     
+    private bool _raining;
+    public float spawnRate = 1f;
+    private float _spawnRate;
+    
     private void Start()
     {
-        InvokeRepeating(nameof(SpawnRainDrop), 0.0f,0.8f);
+        _spawnRate = spawnRate;
+        //InvokeRepeating(nameof(SpawnRainDrop), 0.0f,0.8f);
+    }
+
+    private void FixedUpdate()
+    {
+        _spawnRate -= Time.fixedDeltaTime;
+        if (_raining && _spawnRate <= 0)
+        {
+            SpawnRainDrop();
+            _spawnRate = spawnRate;
+        }
     }
 
     private void OnDrawGizmosSelected()
@@ -44,5 +60,15 @@ public class RaindropManager : MonoBehaviour
         RainDropGameObject.transform.parent = this.transform;
         
         Destroy(RainDropGameObject, 5);
+    }
+
+    public void StartRain()
+    {
+        _raining = true;
+    }
+
+    public void StopRain()
+    {
+        _raining = false;
     }
 }

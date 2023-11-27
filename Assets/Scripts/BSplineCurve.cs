@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -17,7 +18,7 @@ public class BSplineCurve : MonoBehaviour
     [SerializeField]private bool forward;
     private float _tValue;
 
-    private const float H = 0.05f;
+    private const float H = 0.1f;
     private float _tmin = 0.0f;
     private float _tmax;
 
@@ -44,6 +45,10 @@ public class BSplineCurve : MonoBehaviour
     {
         if (obj)
             MoveNpc(Time.fixedDeltaTime);
+        
+
+        Check();
+
     }
     
     public void InitializeKnotVector()
@@ -126,6 +131,37 @@ public class BSplineCurve : MonoBehaviour
 
         return my;
     }
+    
+    bool IsBetween ( Vector3 C )
+    {
+        for (int i = 0; i < controlPoints.Count; i++)
+        {
+            
+            if (controlPoints[i+1] != null)
+            {
+                var A = controlPoints[i + 1];
+                var B = controlPoints[i];
+                
+                return Vector3.Dot( (B-A).normalized , (C-B).normalized ) < 0f && Vector3.Dot( (A-B).normalized , (C-A).normalized )<0f;
+            }
+        }
+        return false;
+    }
+
+    void Check()
+    {
+        PhysicsBall[] physicsBalls = FindObjectsOfType<PhysicsBall>();
+
+        foreach (var ball in physicsBalls)
+        {
+            if (ball.isRain) return;
+            if (IsBetween(ball.GameObject().transform.position))
+            {
+                Debug.Log("a");
+                //ball.GameObject().SetActive(false);
+            }
+        }
+    }
 
     void MoveNpc(float dt)
     {
@@ -146,7 +182,9 @@ public class BSplineCurve : MonoBehaviour
                 if (!isNpc)
                 {
                     // "Floating" effect
-                    obj.transform.position += trajectory + new Vector3(0, Mathf.Sin(_tValue * 5) * 0.07f, 0);
+                    const float speed = 5;
+                    const float amplitude = 0.07f;
+                    obj.transform.position += trajectory + Vector3.up * (Mathf.Sin(_tValue * speed) * amplitude);
                 }
                 else
                 {

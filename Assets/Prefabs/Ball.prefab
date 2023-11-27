@@ -58,6 +58,7 @@ MonoBehaviour:
   moving: 1
   elapsedTime: 0
   splineExists: 0
+  isRain: 1
   controlPoints: []
   spline: {fileID: 1848994699224732371, guid: 40dd32dabb788f247a86e25cac6a70f2, type: 3}
   ballMaterial: {fileID: 2100000, guid: c6438f776aa1f0548b0d9b0080567430, type: 2}

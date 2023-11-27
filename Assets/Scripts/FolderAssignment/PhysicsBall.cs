@@ -38,6 +38,7 @@ public class PhysicsBall : MonoBehaviour
     private float _maxZ = float.MinValue;
 
     private float _timer;
+    public bool isRain;
     [SerializeField] private bool splineExists;
     [SerializeField] private List<Vector3> controlPoints;
 
@@ -64,28 +65,33 @@ public class PhysicsBall : MonoBehaviour
         FindExtremeValues();
 
         splineExists = false;
+
+        _timer = 2f;
     }
 
     void FixedUpdate()
     {
-        if (surface) //&& moving)
+        if (surface && moving)
         {
             Move();
             
             _timer += Time.fixedDeltaTime;
 
-            if (_timer >= 0.5f)
+            if (_timer >= 1f)
             {
-                controlPoints.Add(currentPos);
+                controlPoints.Add(currentPos + Vector3.up*radius);
                 _timer = 0;
             }
         }
-
-        if (!moving && !splineExists)
+        
+        if (!moving && !splineExists &&isRain)
         {
             controlPoints.Add(currentPos);
             GenerateBSpline();
         }
+        
+        if (!moving)
+            Destroy(this);
     }
 
     void GenerateBSpline()
@@ -173,7 +179,6 @@ public class PhysicsBall : MonoBehaviour
                     
                     // Calculate the normal (n) of the collision plane
                     var n = (_previousNormal + currentNormal).normalized;
-
                     Correction(n);
                     
                     // Update the velocity vector r = v − 2(v · n)n
@@ -193,6 +198,7 @@ public class PhysicsBall : MonoBehaviour
                 _previousNormal = currentNormal;
             }
         }
+        Correction(Vector3.up);
     }
     
     void Move2()
@@ -275,8 +281,6 @@ public class PhysicsBall : MonoBehaviour
                                 
                                 // Calculate the normal (n) of the collision plane
                                 var n = (_previousNormal + currentNormal).normalized;
-
-                                Correction(n);
                                 
                                 // Update the velocity vector r = v − 2(v · n)n
                                 var velocityAfter = _previousVelocity - 2 * Vector3.Dot(_previousVelocity, n) * n;
@@ -299,6 +303,7 @@ public class PhysicsBall : MonoBehaviour
             }
         }
     }
+    
 
     void Correction(Vector3 normal)
     {
