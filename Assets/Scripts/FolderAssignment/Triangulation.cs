@@ -44,12 +44,6 @@ public class Triangulation : MonoBehaviour
 
     private List<Quad> _quads = new();
 
-    public List<int>[] Grid;
-    public int cellSize = 10;
-    public int numCellsX;
-    public int numCellsZ;
-    
-
     private void Awake()
     {
         _mesh = new Mesh();
@@ -62,8 +56,6 @@ public class Triangulation : MonoBehaviour
 
         ConstructMeshData();
         UpdateMesh();
-
-        InitializeGrid();
     }
     
     void UpdateMesh()
@@ -293,25 +285,6 @@ public class Triangulation : MonoBehaviour
         return baryc;
     }
 
-    void InitializeGrid()
-    {
-        // Calculate the number of cells based on the terrain size and cell size
-        numCellsX = Mathf.CeilToInt((maxX - minX) / cellSize);
-        numCellsZ = Mathf.CeilToInt((maxZ - minZ) / cellSize);
-
-        // Create a grid with empty lists for each cell
-        Grid = new List<int>[numCellsX * numCellsZ];
-        for (int i = 0; i < Grid.Length; i++)
-        {
-            Grid[i] = new List<int>();
-        }
-
-        // Populate the grid with triangle indices based on vertices
-        for (int i = 0; i < triangles.Length; i += 3)
-        {
-        }
-    }
-    
     // private void OnDrawGizmos()
     // {
     //     if (corners == null || corners.Length <= 0) return;
