@@ -22,6 +22,8 @@ public class SplineSurface : MonoBehaviour
 
     private MeshRenderer _meshRenderer;
     private MeshFilter _meshFilter;
+    [SerializeField]private Color[] colors;
+    public Gradient gradient;
 
     private void Start()
     {
@@ -51,19 +53,14 @@ public class SplineSurface : MonoBehaviour
 
     void CalculateSplineSurface()
     {
-        double intervalI, incrementI;
-        double intervalJ, incrementJ;
-        double bi, bj;
-
-        incrementI = (numControlPointsX - degreeX + 2) / ((double)resolutionX - 1);
-        incrementJ = (numControlPointsY - degreeY + 2) / ((double)resolutionY - 1);
+        var incrementI = (numControlPointsX - degreeX + 2) / ((double)resolutionX - 1);
+        var incrementJ = (numControlPointsY - degreeY + 2) / ((double)resolutionY - 1);
 
         // Your spline surface calculation logic goes here
-
-        intervalI = 0;
+        double intervalI = 0;
         for (int i = 0; i < resolutionX - 1; i++)
         {
-            intervalJ = 0;
+            double intervalJ = 0;
             for (int j = 0; j < resolutionY - 1; j++)
             {
                 _output[i, j] = Vector3.zero;
@@ -72,15 +69,13 @@ public class SplineSurface : MonoBehaviour
                 {
                     for (int kj = 0; kj <= numControlPointsY; kj++)
                     {
-                        bi = SplineBlend(ki, degreeX, knotsX, intervalI);
-                        bj = SplineBlend(kj, degreeY, knotsY, intervalJ);
+                        var bi = SplineBlend(ki, degreeX, knotsX, intervalI);
+                        var bj = SplineBlend(kj, degreeY, knotsY, intervalJ);
                         _output[i, j] += _controlPoints[ki, kj] * (float)(bi * bj);
                     }
                 }
-
                 intervalJ += incrementJ;
             }
-
             intervalI += incrementI;
         }
     }
@@ -137,8 +132,14 @@ public class SplineSurface : MonoBehaviour
         // Assign the mesh to the MeshFilter
         _meshFilter.mesh = mesh;
 
-        // Optionally, you can set materials, shaders, or other properties for rendering
-        // meshRenderer.material = yourMaterial;
+        colors = new Color[mesh.vertices.Length];
+        for (int i = 0; i < mesh.vertices.Length; i++)
+        {
+            float height = Mathf.InverseLerp(-1, 1, vertices[i].y);
+            colors[i] = gradient.Evaluate(height);
+        }
+        
+        mesh.colors = colors;
     }
     
     void SplineKnots(int[] u,int n,int t)
