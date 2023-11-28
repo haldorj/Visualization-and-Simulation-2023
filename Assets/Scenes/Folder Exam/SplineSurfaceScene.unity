@@ -358,8 +358,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   numControlPointsX: 7
   numControlPointsY: 6
-  degreeX: 3
-  degreeY: 3
+  degreeX: 4
+  degreeY: 4
   knotsX: 
   knotsY: 
   resolutionX: 60

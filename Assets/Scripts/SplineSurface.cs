@@ -9,13 +9,17 @@ using Random = UnityEngine.Random;
 
 public class SplineSurface : MonoBehaviour
 {
-    public int numControlPointsX;
-    public int numControlPointsY;
-    private int _numRectanglesX = 3;   //ni
-    private int _numRectanglesY = 4;   //nj
+    [Range(5, 8)]
+    [SerializeField]public int numControlPointsX = 6;
+    [Range(5, 7)]
+    [SerializeField]public int numControlPointsY = 5;
+    [Range(2,4)]
+    public int degreeX = 3;
+    [Range(2,4)]
+    public int degreeY = 3;
+    
     private Vector3[,] _controlPoints;
-    public int degreeX = 3;          //ti
-    public int degreeY = 3;          //tj
+    
     public int[] knotsX;
     public int[] knotsY;
     public int resolutionX = 30;
@@ -29,9 +33,6 @@ public class SplineSurface : MonoBehaviour
 
     private void Awake()
     {
-        _numRectanglesX = numControlPointsX - 1;
-        _numRectanglesY = numControlPointsY - 1;
-        
         _controlPoints = new Vector3[numControlPointsX, numControlPointsY];
 
         _output = new Vector3[resolutionX, resolutionY];
@@ -49,9 +50,9 @@ public class SplineSurface : MonoBehaviour
 
     private void GenerateControlPoints()
     {
-        for (int i = 0; i <= _numRectanglesX; i++)
+        for (int i = 0; i < numControlPointsX; i++)
         {
-            for (int j = 0; j <= _numRectanglesY; j++)
+            for (int j = 0; j < numControlPointsY; j++)
             {
                 _controlPoints[i, j] = new Vector3(i, Random.Range(-1f, 1f), j);
             }
@@ -60,8 +61,8 @@ public class SplineSurface : MonoBehaviour
 
     void CalculateSplineSurface()
     {
-        var incrementI = (numControlPointsX - degreeX) / ((double)resolutionX - 1);
-        var incrementJ = (numControlPointsY - degreeY) / ((double)resolutionY - 1);
+        var incrementX = (numControlPointsX - degreeX) / ((double)resolutionX - 1);
+        var incrementY = (numControlPointsY - degreeY) / ((double)resolutionY - 1);
 
         double intervalI = 0;
         for (int i = 0; i < resolutionX - 1; i++)
@@ -80,9 +81,9 @@ public class SplineSurface : MonoBehaviour
                         _output[i, j] += _controlPoints[ki, kj] * (float)(bi * bj);
                     }
                 }
-                intervalJ += incrementJ;
+                intervalJ += incrementY;
             }
-            intervalI += incrementI;
+            intervalI += incrementX;
         }
     }
 
@@ -221,18 +222,18 @@ public class SplineSurface : MonoBehaviour
             Gizmos.DrawSphere(point, .04f);
         }
         Gizmos.color = Color.green;
-        for (int i = 0; i <= _numRectanglesX; i++)
+        for (int i = 0; i < numControlPointsX; i++)
         {
-            for (int j = 0; j < _numRectanglesY; j++)
+            for (int j = 0; j < numControlPointsY - 1; j++)
             {
                 // Up
                 Gizmos.DrawLine(_controlPoints[i, j], _controlPoints[i, j + 1]);
             }
         }
 
-        for (int i = 0; i < _numRectanglesX; i++)
+        for (int i = 0; i < numControlPointsX - 1; i++)
         {
-            for (int j = 0; j <= _numRectanglesY; j++)
+            for (int j = 0; j < numControlPointsY; j++)
             {
                 // Right
                 Gizmos.DrawLine(_controlPoints[i, j], _controlPoints[i + 1, j]);
