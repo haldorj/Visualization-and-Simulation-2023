@@ -27,21 +27,20 @@ public class SplineSurface : MonoBehaviour
     [SerializeField]private Color[] colors;
     public Gradient gradient;
 
-    private void Start()
+    private void Awake()
     {
         _numRectanglesX = numControlPointsX - 1;
         _numRectanglesY = numControlPointsY - 1;
         
-        _controlPoints = new Vector3[_numRectanglesX + 1, _numRectanglesY + 1];
-        knotsX = new int[_numRectanglesX + degreeX + 1];
-        knotsY = new int[_numRectanglesY + degreeY + 1];
+        _controlPoints = new Vector3[numControlPointsX, numControlPointsY];
+
         _output = new Vector3[resolutionX, resolutionY];
         
-        // SplineKnots(knotsX,numRectanglesX,degreeX);
-        // SplineKnots(knotsY,numRectanglesY,degreeY);
+        knotsX = new int[numControlPointsX + degreeX + 1];
+        knotsY = new int[numControlPointsY + degreeY + 1];
         
-        knotsX = InitializeKnotVector(knotsX,_numRectanglesX,degreeX);
-        knotsY = InitializeKnotVector(knotsY,_numRectanglesY,degreeY);
+        knotsX = InitializeKnotVector(knotsX,numControlPointsX,degreeX);
+        knotsY = InitializeKnotVector(knotsY,numControlPointsY,degreeY);
 
         GenerateControlPoints();
         CalculateSplineSurface();
@@ -61,8 +60,8 @@ public class SplineSurface : MonoBehaviour
 
     void CalculateSplineSurface()
     {
-        var incrementI = (_numRectanglesX - degreeX + 2) / ((double)resolutionX - 1);
-        var incrementJ = (_numRectanglesY - degreeY + 2) / ((double)resolutionY - 1);
+        var incrementI = (numControlPointsX - degreeX) / ((double)resolutionX - 1);
+        var incrementJ = (numControlPointsY - degreeY) / ((double)resolutionY - 1);
 
         double intervalI = 0;
         for (int i = 0; i < resolutionX - 1; i++)
@@ -72,12 +71,12 @@ public class SplineSurface : MonoBehaviour
             {
                 _output[i, j] = Vector3.zero;
 
-                for (int ki = 0; ki <= _numRectanglesX; ki++)
+                for (int ki = 0; ki < numControlPointsX; ki++)
                 {
-                    for (int kj = 0; kj <= _numRectanglesY; kj++)
+                    for (int kj = 0; kj < numControlPointsY; kj++)
                     {
-                        var bi = SplineBlend(ki, degreeX, knotsX, intervalI);
-                        var bj = SplineBlend(kj, degreeY, knotsY, intervalJ);
+                        var bi = SplineBlend(ki, degreeX + 1, knotsX, intervalI);
+                        var bj = SplineBlend(kj, degreeY + 1, knotsY, intervalJ);
                         _output[i, j] += _controlPoints[ki, kj] * (float)(bi * bj);
                     }
                 }
@@ -162,8 +161,6 @@ public class SplineSurface : MonoBehaviour
     int[] InitializeKnotVector(int[] knots, int numRects, int degree)
     {
         int index = 0;
-        numRects++; // increment once to get number of controlpoints
-        degree--;
 
         List<int> k = new List<int>(); // knots
 

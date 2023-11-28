@@ -356,8 +356,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 422903338be0fb6439e62a3d094ac796, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numRectanglesX: 6
-  numRectanglesY: 5
+  numControlPointsX: 7
+  numControlPointsY: 6
   degreeX: 3
   degreeY: 3
   knotsX: 
