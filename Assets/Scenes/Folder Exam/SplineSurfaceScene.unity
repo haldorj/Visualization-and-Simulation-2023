@@ -358,8 +358,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   numControlPointsX: 7
   numControlPointsY: 6
-  degreeX: 4
-  degreeY: 4
+  degreeX: 2
+  degreeY: 2
   knotsX: 
   knotsY: 
   resolutionX: 60
@@ -423,7 +423,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 6154342bd93368e41ab817a3dcbcb25d, type: 2}
+  - {fileID: 2100000, guid: 75cc622886664ff4a8159ea0ff4a6820, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

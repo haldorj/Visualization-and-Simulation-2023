@@ -26,6 +26,10 @@ public class SplineSurface : MonoBehaviour
     public int resolutionY = 40;
     private Vector3[,] _output;
 
+    private Mesh _mesh;
+    private List<Vector3> _vertices;
+    private List<int> _triangles;
+    
     private MeshRenderer _meshRenderer;
     private MeshFilter _meshFilter;
     [SerializeField]private Color[] colors;
@@ -45,7 +49,8 @@ public class SplineSurface : MonoBehaviour
 
         GenerateControlPoints();
         CalculateSplineSurface();
-        DisplaySurface();
+        GenerateMeshData();
+        UpdateMesh();
     }
 
     private void GenerateControlPoints()
@@ -59,7 +64,7 @@ public class SplineSurface : MonoBehaviour
         }
     }
 
-    void CalculateSplineSurface()
+    private void CalculateSplineSurface()
     {
         var incrementX = (numControlPointsX - degreeX) / ((double)resolutionX - 1);
         var incrementY = (numControlPointsY - degreeY) / ((double)resolutionY - 1);
@@ -76,8 +81,8 @@ public class SplineSurface : MonoBehaviour
                 {
                     for (int kj = 0; kj < numControlPointsY; kj++)
                     {
-                        var bi = SplineBlend(ki, degreeX + 1, knotsX, intervalI);
-                        var bj = SplineBlend(kj, degreeY + 1, knotsY, intervalJ);
+                        var bi = BasisFunction(ki, degreeX + 1, knotsX, intervalI);
+                        var bj = BasisFunction(kj, degreeY + 1, knotsY, intervalJ);
                         _output[i, j] += _controlPoints[ki, kj] * (float)(bi * bj);
                     }
                 }
@@ -87,17 +92,17 @@ public class SplineSurface : MonoBehaviour
         }
     }
 
-    void DisplaySurface()
+    private void GenerateMeshData()
     {
-        Mesh mesh = new Mesh();
-        List<Vector3> vertices = new List<Vector3>();
-        List<int> triangles = new List<int>();
+        _mesh = new Mesh();
+        _vertices = new List<Vector3>();
+        _triangles = new List<int>();
 
         for (int i = 0; i < resolutionX; i++)
         {
             for (int j = 0; j < resolutionY; j++)
             {
-                vertices.Add(_output[i, j]);
+                _vertices.Add(_output[i, j]);
             }
         }
 
@@ -107,20 +112,22 @@ public class SplineSurface : MonoBehaviour
             {
                 int index = i * resolutionY + j;
 
-                triangles.Add(index);
-                triangles.Add(index + 1);
-                triangles.Add(index + resolutionY);
+                _triangles.Add(index);
+                _triangles.Add(index + 1);
+                _triangles.Add(index + resolutionY);
 
-                triangles.Add(index + resolutionY);
-                triangles.Add(index + 1);
-                triangles.Add(index + resolutionY + 1);
+                _triangles.Add(index + resolutionY);
+                _triangles.Add(index + 1);
+                _triangles.Add(index + resolutionY + 1);
             }
         }
 
-        mesh.vertices = vertices.ToArray();
-        mesh.triangles = triangles.ToArray();
+        _mesh.vertices = _vertices.ToArray();
+        _mesh.triangles = _triangles.ToArray();
+    }
 
-
+    private void UpdateMesh()
+    {
         _meshRenderer = GetComponent<MeshRenderer>();
         if (_meshRenderer == null)
         {
@@ -133,33 +140,19 @@ public class SplineSurface : MonoBehaviour
             _meshFilter = gameObject.AddComponent<MeshFilter>();
         }
         
-        _meshFilter.mesh = mesh;
+        _meshFilter.mesh = _mesh;
 
-        colors = new Color[mesh.vertices.Length];
-        for (int i = 0; i < mesh.vertices.Length; i++)
+        colors = new Color[_mesh.vertices.Length];
+        for (int i = 0; i < _mesh.vertices.Length; i++)
         {
-            float height = Mathf.InverseLerp(-1, 1, vertices[i].y);
+            float height = Mathf.InverseLerp(-1, 1, _vertices[i].y);
             colors[i] = gradient.Evaluate(height);
         }
-        mesh.colors = colors;
-    }
-    
-    void SplineKnots(int[] u,int n,int t)
-    {
-        int j;
 
-        for (j=0;j<=n+t;j++) 
-        {
-            if (j < t)
-                u[j] = 0;
-            else if (j <= n)
-                u[j] = j - t + 1;
-            else if (j > n)
-                u[j] = n - t + 2;	
-        }
+        _mesh.colors = colors;
     }
 
-    int[] InitializeKnotVector(int[] knots, int numRects, int degree)
+    private static int[] InitializeKnotVector(int[] knots, int numRects, int degree)
     {
         int index = 0;
 
@@ -190,7 +183,7 @@ public class SplineSurface : MonoBehaviour
         return k.ToArray();
     }
 
-    double SplineBlend(int k,int t, int[] u,double v)
+    private static double BasisFunction(int k,int t, int[] u,double v)
     {
         double value;
 
@@ -203,12 +196,12 @@ public class SplineSurface : MonoBehaviour
             if ((u[k+t-1] == u[k]) && (u[k+t] == u[k+1]))
                 value = 0;
             else if (u[k+t-1] == u[k]) 
-                value = (u[k+t] - v) / (u[k+t] - u[k+1]) * SplineBlend(k+1,t-1,u,v);
+                value = (u[k+t] - v) / (u[k+t] - u[k+1]) * BasisFunction(k+1,t-1,u,v);
             else if (u[k+t] == u[k+1])
-                value = (v - u[k]) / (u[k+t-1] - u[k]) * SplineBlend(k,t-1,u,v);
+                value = (v - u[k]) / (u[k+t-1] - u[k]) * BasisFunction(k,t-1,u,v);
             else
-                value = (v - u[k]) / (u[k+t-1] - u[k]) * SplineBlend(k,t-1,u,v) + 
-                        (u[k+t] - v) / (u[k+t] - u[k+1]) * SplineBlend(k+1,t-1,u,v);
+                value = (v - u[k]) / (u[k+t-1] - u[k]) * BasisFunction(k,t-1,u,v) + 
+                        (u[k+t] - v) / (u[k+t] - u[k+1]) * BasisFunction(k+1,t-1,u,v);
         }
         return(value);
     }
@@ -216,12 +209,11 @@ public class SplineSurface : MonoBehaviour
     private void OnDrawGizmos()
     {
         if (_controlPoints == null) return;
+        Gizmos.color = Color.green;
         foreach (var point in _controlPoints)
         {
-            Gizmos.color = Color.magenta;
             Gizmos.DrawSphere(point, .04f);
         }
-        Gizmos.color = Color.green;
         for (int i = 0; i < numControlPointsX; i++)
         {
             for (int j = 0; j < numControlPointsY - 1; j++)
@@ -230,7 +222,6 @@ public class SplineSurface : MonoBehaviour
                 Gizmos.DrawLine(_controlPoints[i, j], _controlPoints[i, j + 1]);
             }
         }
-
         for (int i = 0; i < numControlPointsX - 1; i++)
         {
             for (int j = 0; j < numControlPointsY; j++)
