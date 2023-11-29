@@ -31,15 +31,15 @@ public class Triangulation : MonoBehaviour
 
     // Only used with camera class
     public MeshCollider meshCollider;
-    
-    public struct Quad
+
+    private struct Quad
     {
-        public float XMax;
-        public float XMin;
-        public float ZMax;
-        public float ZMin;
+        public float xMax;
+        public float xMin;
+        public float zMax;
+        public float zMin;
         
-        public Vector3 Center;
+        public Vector3 center;
     }
 
     private List<Quad> _quads = new();
@@ -83,7 +83,7 @@ public class Triangulation : MonoBehaviour
 
         foreach (var quad in _quads)
         {
-            vertexList.Add(quad.Center);
+            vertexList.Add(quad.center);
         }
 
         vertices = vertexList.ToArray();
@@ -133,14 +133,14 @@ public class Triangulation : MonoBehaviour
                 {
                     Quad quad = new Quad
                     {
-                        XMin = x * quadSize,
-                        XMax = (x + 1) * quadSize,
-                        ZMin = z * quadSize,
-                        ZMax = (z + 1) * quadSize,
-                        Center = new Vector3(x * quadSize + quadSize / 2, 0, z * quadSize + quadSize / 2)
+                        xMin = x * quadSize,
+                        xMax = (x + 1) * quadSize,
+                        zMin = z * quadSize,
+                        zMax = (z + 1) * quadSize,
+                        center = new Vector3(x * quadSize + quadSize / 2, 0, z * quadSize + quadSize / 2)
                     };
 
-                    quad.Center.y = CalculateAverageHeightInQuad(quad);
+                    quad.center.y = CalculateAverageHeightInQuad(quad);
                     
                     _quads.Add(quad);
                 }
@@ -175,7 +175,7 @@ public class Triangulation : MonoBehaviour
         
         foreach (var vertex in _vertexData)
         {
-            if (vertex.x >= quad.XMin && vertex.x <= quad.XMax && vertex.z >= quad.ZMin && vertex.z <= quad.ZMax)
+            if (vertex.x >= quad.xMin && vertex.x <= quad.xMax && vertex.z >= quad.zMin && vertex.z <= quad.zMax)
             {
                 totalHeight += vertex.y;
                 pointCount++;

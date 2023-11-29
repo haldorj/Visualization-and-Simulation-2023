@@ -163,7 +163,7 @@ public class BSplineCurve : MonoBehaviour
             for (int i = 0; i < positions.Count; i++)
             {
                 float distance = Vector3.Distance(positions[i], ball.transform.position);
-                if (distance <= 7)
+                if (distance <= 6)
                 {
                     obj.SetActive(true);
                     obj.transform.position = positions[i];
@@ -179,7 +179,6 @@ public class BSplineCurve : MonoBehaviour
 
     GameObject CreateObj()
     {
-        
         GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         sphere.transform.localScale = Vector3.one * (SphereRadius * 2);
         sphere.GetComponent<Renderer>().material = ballMaterial;
@@ -257,28 +256,6 @@ public class BSplineCurve : MonoBehaviour
     private void OnDrawGizmos()
     {
         if (knots.Length <= 0 || controlPoints.Count <= 0) return;
-        
-        // foreach (var point in controlPoints)
-        // {
-        //     Gizmos.color = Color.blue;
-        //     Gizmos.DrawSphere(point, 0.02f);
-        // }
-        //
-        // for (int i = 0; i < controlPoints.Capacity - 1; i++)
-        // {
-        //     Gizmos.color = Color.blue;
-        //     Gizmos.DrawLine(controlPoints[i], controlPoints[i + 1]);
-        // }
-        
-        // var prev = EvaluateBSplineSimple(_tmin);
-        // for (var t = _tmin + H; t <= _tmax; t += H)
-        // {
-        //     var current = EvaluateBSplineSimple(t);
-        //     Gizmos.color = Color.blue;
-        //     
-        //     Gizmos.DrawLine(prev, current);
-        //     prev = current;
-        // }
         
         foreach (var point in positions)
         {

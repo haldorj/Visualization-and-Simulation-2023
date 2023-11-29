@@ -71,19 +71,29 @@ public class PhysicsBall : MonoBehaviour
 
             if (_timer >= 1f)
             {
-                controlPoints.Add(currentPos + Vector3.up*radius);
+                AddControlPoint();
                 _timer = 0;
             }
         }
         
         if (!moving && !splineExists && isRain)
         {
-            controlPoints.Add(currentPos + Vector3.up * radius);
+            AddControlPoint();
             GenerateBSpline();
         }
         
         if (!moving)
             Destroy(this);
+    }
+
+    void AddControlPoint()
+    {
+        var height = surface.GetSurfaceHeight(new Vector2(currentPos.x, currentPos.z));
+        if (height <= 0)
+            height = currentPos.y;
+        
+        var position = new Vector3(currentPos.x, height, currentPos.z);
+        controlPoints.Add(position + Vector3.up * radius);
     }
 
     private void GenerateBSpline()
@@ -155,10 +165,10 @@ public class PhysicsBall : MonoBehaviour
                     
                     // Calculate the normal (n) of the collision plane
                     var n = (_previousNormal + currentNormal).normalized;
-                    Correction(n);
+                    //Correction(n);
                     
                     // Update the velocity vector r = v − 2(v · n)n
-                    var velocityAfter = _previousVelocity - 2 * Vector3.Dot(_previousVelocity, n) * n;
+                    var velocityAfter = currentVelocity - 2 * Vector3.Dot(currentVelocity, n) * n;
                     
                     currentVelocity = velocityAfter + accelerationVector * Time.fixedDeltaTime;
                     _previousVelocity = currentVelocity;
