@@ -2,6 +2,10 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
+// Equations used in this scripts are from:
+// Nylund, D. (2023). MAT301 Matematikk III VSIM101 Visualisering og simulering 
+// forelesningsnotater og oppgaver
+
 public class PhysicsBall : MonoBehaviour
 {
     [SerializeField]private float radius = 0.015f;
@@ -139,7 +143,6 @@ public class PhysicsBall : MonoBehaviour
                 // Current triangle index
                 currentTriangle = i / 3;
                 // Calculate normal vector
-
                 currentNormal = Vector3.Cross(p1 - p0, p2 - p0).normalized;
                 // Calculate acceleration vector
                 accelerationVector = new Vector3(currentNormal.x * currentNormal.y, 
@@ -149,9 +152,6 @@ public class PhysicsBall : MonoBehaviour
                 // Update velocity
                 currentVelocity = _previousVelocity + accelerationVector * Time.fixedDeltaTime;
                 _previousVelocity = currentVelocity;
-
-                //Debug.Log("Velocity: " + currentVelocity.magnitude);
-                
                 // Update position
                 currentPos = _previousPos + currentVelocity * Time.fixedDeltaTime;
                 _previousPos = currentPos;

@@ -7,6 +7,14 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
+// This implementation takes heavy inspiration from:
+// Bourke, P. (1996, November). Spline Surface (in 3D). from Paul Bourke: 
+// https://paulbourke.net/geometry/spline
+
+// The function "BasisFunction" is the same as "SplineBlend" from:
+// Bourke, P. (1996, November). Spline curves (in 3D). from Paul Bourke: 
+// https://paulbourke.net/geometry/spline/
+
 public class SplineSurface : MonoBehaviour
 {
     [Range(5, 8)]

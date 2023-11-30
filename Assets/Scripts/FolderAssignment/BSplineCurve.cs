@@ -4,6 +4,9 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+// The functions "EvaluateBSplineSimple" and "FindKnotInterval" are from:
+// Nylund, D. (2023). MAT301 Matematikk III VSIM101 Visualisering og simulering 
+// forelesningsnotater og oppgaver
 public class BSplineCurve : MonoBehaviour
 {
     [SerializeField] public List<Vector3> controlPoints = new(); // The controlPoints (c) add these in editor.
