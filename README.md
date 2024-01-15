@@ -1,14 +1,16 @@
 
-Project Description:
+## Project Description:
 
 The project involves utilizing point cloud data to construct a regular triangulation of a terrain. 
 It simulates spheres sliding down the terrain with custom physics that adhere to Newton's second law. 
 Additionally, the project simulates rain and creates rivers by generating B-Splines that follow the path of raindrops. 
 The simulation extends to spheres floating down the generated river.
 
-Other Details:
+## Other Details:
 
 The B-Spline surface employed in the project is bi-quadratic (2nd degree), although it can also be of 3rd or 4th degree.
+
+## Images:
 
 Visualization of pointcloud data in Unity
 
